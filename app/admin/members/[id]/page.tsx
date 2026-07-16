@@ -279,7 +279,7 @@ export default function MemberDetailPage() {
         </div>
       </div>
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer />
     </div>
   )
 }

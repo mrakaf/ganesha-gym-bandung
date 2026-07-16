@@ -112,7 +112,7 @@ export default function CompleteProfilePage() {
 
   return (
     <>
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light py-12 px-4 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">

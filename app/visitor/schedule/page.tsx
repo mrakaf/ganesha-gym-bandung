@@ -1986,7 +1986,7 @@ export default function SchedulePage() {
         </div>
       )}
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer />
     </div>
   )
 }

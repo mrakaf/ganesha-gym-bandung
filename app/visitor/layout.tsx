@@ -86,7 +86,7 @@ function VisitorLayoutChrome({
 
   return (
     <>
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer />
       <div className="visitor-area relative min-h-screen text-white" style={{ backgroundColor: '#111827' }}>
         <PremiumBackground />
         <nav className="bg-[#0f172a]/60 backdrop-blur-2xl border-b border-white/[0.08] sticky top-0 z-50 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)]">
