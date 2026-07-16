@@ -1,5 +1,5 @@
-export const dynamic = 'force-dynamic';
 'use client'
+export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react'
 import { CheckCircle2, XCircle, Clock, DollarSign, Loader2, Banknote, Search } from 'lucide-react'
