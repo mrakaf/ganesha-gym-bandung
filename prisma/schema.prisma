@@ -186,6 +186,7 @@ enum ReminderType {
   EXPIRED
   OVERDUE_H3
   OVERDUE_H7
+  CUSTOM
 }
 
 enum PremiumAccessType {
