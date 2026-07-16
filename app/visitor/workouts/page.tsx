@@ -1955,7 +1955,7 @@ export default function WorkoutsPage() {
     const t = window.setTimeout(() => {
       try {
         const payload: WorkoutRecommendationPersisted = {
-          v: 1,
+          v: 2,
           recommendationMode,
           selectedTarget,
           selectedGoal,
