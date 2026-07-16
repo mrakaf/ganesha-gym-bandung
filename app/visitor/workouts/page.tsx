@@ -1916,7 +1916,7 @@ export default function WorkoutsPage() {
       const raw = sessionStorage.getItem(recommendStorageKey)
       if (!raw) return
       const data = JSON.parse(raw) as WorkoutRecommendationPersisted
-      if (data.v !== 1) return
+      if (data.v !== 2) return
       setRecommendationMode(data.recommendationMode === 'guided' ? 'guided' : 'target')
       setSelectedTarget(typeof data.selectedTarget === 'string' ? data.selectedTarget : '')
       if (data.selectedGoal === 'bulking' || data.selectedGoal === 'cutting' || data.selectedGoal === 'maintain') {
