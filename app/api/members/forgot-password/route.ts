@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server'
 import { PasswordResetLinkController } from '@/src/controllers/member/password-reset-link-controller'
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AdminAuthController } from '@/src/controllers/admin/auth-controller'
 
 const adminAuthController = new AdminAuthController()

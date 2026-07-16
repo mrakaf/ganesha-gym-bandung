@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server'
 import { AdminExerciseController } from '@/src/controllers/admin/exercise-controller'
 
