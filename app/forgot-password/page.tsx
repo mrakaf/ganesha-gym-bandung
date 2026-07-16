@@ -1,14 +1,14 @@
 'use client'
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, ArrowLeft, Shield } from 'lucide-react'
 import { useToast, ToastContainer } from '@/components/ui/Toast'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordInner() {
   const searchParams = useSearchParams()
   const isFromAdmin = searchParams.get('from') === 'admin'
 
@@ -139,5 +139,20 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white font-serif">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <ForgotPasswordInner />
+    </Suspense>
   )
 }
