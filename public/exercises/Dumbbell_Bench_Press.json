@@ -1,0 +1,27 @@
+{
+  "name": "Dumbbell Bench Press",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "dumbbell",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+    "shoulders",
+    "triceps"
+  ],
+  "instructions": [
+    "Berbaring telentang di bangku datar dengan dumbbell di setiap tangan yang bertumpu di atas paha Anda. Telapak tangan Anda akan saling menghadap.",
+    "Kemudian, gunakan paha Anda untuk membantu mengangkat dumbbell ke atas, angkat dumbbell satu per satu sehingga Anda dapat memegangnya di depan Anda dengan lebar bahu.",
+    "Setelah berada di lebar bahu, putar pergelangan tangan Anda ke depan sehingga telapak tangan Anda menghadap ke depan menjauhi Anda. Dumbbell harus berada tepat di sisi dada Anda, dengan lengan atas dan lengan bawah membentuk sudut 90 derajat. Pastikan untuk tetap memegang kendali penuh atas dumbbell setiap saat. Ini akan menjadi posisi awal Anda.",
+    "Kemudian, saat Anda menghembuskan napas, gunakan dada Anda untuk mendorong dumbbell ke atas. Kunci lengan Anda di puncak gerakan dan remas dada Anda, tahan selama satu detik lalu mulai turun perlahan. Tips: Idealnya, menurunkan beban membutuhkan waktu sekitar dua kali lebih lama daripada mengangkatnya.",
+    "Ulangi gerakan untuk jumlah repetisi yang ditentukan dalam program latihan Anda."
+  ],
+  "category": "strength",
+  "images": [
+    "Dumbbell_Bench_Press/0.jpg",
+    "Dumbbell_Bench_Press/1.jpg"
+  ],
+  "id": "Dumbbell_Bench_Press"
+}

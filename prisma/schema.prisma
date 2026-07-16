@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  passwordResetTokens AdminPasswordResetToken[]
+
+  @@map("users")
+}
+
+model AdminPasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("admin_password_reset_tokens")
+}
+
+model Member {
+  id                     String               @id @default(cuid())
+  name                   String
+  email                  String?              @unique
+  username               String?              @unique
+  password               String?
+  phone                  String?
+  memberCardId           String?              @unique
+  cardIssue              MemberCardIssue?
+  isActive               Boolean              @default(true)
+  mustPayRegistrationFee Boolean              @default(false)
+  membershipStart        DateTime?
+  membershipEnd          DateTime?
+  accessType             PremiumAccessType?
+  accessStart            DateTime?
+  accessEnd              DateTime?
+  height                 Int?                 // Tinggi badan dalam cm
+  weight                 Int?                 // Berat badan dalam kg
+  gymExperienceMonths    Int?                 // Berapa lama sudah gym (dalam bulan)
+  experienceLevel        ExperienceLevel?     // Level pengalaman: pemula, menengah, advanced
+  gender                 Gender?              // Gender: pria, wanita, lainnya
+  dateOfBirth            DateTime?            // Tanggal lahir untuk menghitung umur
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  reminders              EmailReminder[]
+  passwordResetTokens    PasswordResetToken[]
+  payments               Payment[]
+  visits                 Visit[]
+  workoutSessions        WorkoutSession[]
+
+  @@map("members")
+}
+
+enum ExperienceLevel {
+  PEMULA
+  MENENGAH
+  ADVANCED
+}
+
+enum Gender {
+  PRIA
+  WANITA
+  LAINNYA
+}
+
+model MemberCardIssue {
+  id       Int      @id @default(autoincrement())
+  memberId String   @unique
+  issuedAt DateTime @default(now())
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("member_card_issues")
+}
+
+enum CheckInStatus {
+  PENDING
+  CHECKED_IN
+}
+
+model Visit {
+  id            String        @id @default(cuid())
+  memberId      String?
+  visitorName   String?
+  visitDate     DateTime      @default(now())
+  checkInStatus CheckInStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  member        Member?       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("visits")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  memberId      String?
+  type          PaymentType
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  paymentMethod String?
+  orderId       String?       @map("midtransId")
+  description   String?
+  paidAt        DateTime?
+  isVisitUsed   Boolean       @default(false) // Menandai apakah paket Visit sudah dipakai check-in
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  member        Member?       @relation(fields: [memberId], references: [id])
+
+  @@map("payments")
+}
+
+model EmailReminder {
+  id       String       @id @default(cuid())
+  memberId String
+  type     ReminderType
+  sentAt   DateTime     @default(now())
+  status   String       @default("sent")
+  member   Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("email_reminders")
+}
+
+model Announcement {
+  id             String   @id @default(cuid())
+  title          String
+  content        String
+  sentAt         DateTime @default(now())
+  expiresAt      DateTime?
+  sentBy         String?  // The admin who sent it
+  recipientCount Int      @default(0)
+
+  @@map("announcements")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  memberId  String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@map("password_reset_tokens")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum PaymentType {
+  VISIT
+  MEMBERSHIP_NEW
+  MEMBERSHIP_RENEWAL
+  PERSONAL_TRAINER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum ReminderType {
+  EXPIRING_H3
+  EXPIRING_H1
+  EXPIRED
+  OVERDUE_H3
+  OVERDUE_H7
+}
+
+enum PremiumAccessType {
+  VISIT
+  MEMBERSHIP
+}
+
+model Exercise {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  type           String
+  muscle         String
+  equipment      String
+  difficulty     String
+  instructions   String // Original instructions (English)
+  instructionsId String? // Translated instructions (Indonesian) - cached
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("exercises")
+}
+
+/// Satu sesi latihan yang dicatat member (riwayat latihan — server-side).
+model WorkoutSession {
+  id              String   @id @default(cuid())
+  memberId        String
+  completedAt     DateTime @default(now())
+  durationMinutes Int?
+  notes           String?
+  /// Snapshot gerakan: [{ "name": "...", "muscle": "..." }]
+  exercises       Json
+  createdAt       DateTime @default(now())
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, completedAt])
+  @@map("workout_sessions")
+}
+
+model AdminNotification {
+  id        String   @id @default(cuid())
+  type      String   @default("info") // info, success, warning, error
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
+  @@map("admin_notifications")
+}

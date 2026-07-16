@@ -1,0 +1,485 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Playfair+Display:wght@400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #1f2937;
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-bebas: 'Bebas Neue', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-oswald: 'Oswald', sans-serif;
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent via-accent-light to-secondary bg-clip-text text-transparent;
+  }
+  
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-accent/20;
+  }
+}
+
+/* Premium Admin Animations */
+@layer components {
+  .admin-card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm;
+    @apply transition-all duration-300 ease-out;
+    @apply hover:shadow-lg hover:shadow-gray-200/50 hover:-translate-y-0.5 hover:border-gray-200;
+    will-change: transform, box-shadow;
+  }
+
+  .admin-card-lift {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm;
+    @apply transition-all duration-300 ease-out;
+    @apply hover:shadow-xl hover:shadow-gray-200/60 hover:-translate-y-1 hover:border-gray-200;
+    will-change: transform, box-shadow;
+  }
+
+  .admin-btn {
+    @apply transition-all duration-200 ease-out;
+    @apply active:scale-[0.97] active:duration-75;
+  }
+
+  .admin-btn-primary {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:brightness-110 hover:shadow-lg;
+    @apply active:scale-[0.97] active:duration-75;
+  }
+
+  .admin-table-row {
+    @apply transition-colors duration-200 ease-out;
+    @apply hover:bg-gray-50/80;
+  }
+
+  .admin-icon-box {
+    @apply transition-all duration-300 ease-out;
+    @apply group-hover:scale-105;
+    will-change: transform;
+  }
+
+  .admin-link {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:text-cyan-600;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(34, 211, 238, 0.15); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out both;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Premium ambient background animations ─────────────── */
+@keyframes glow-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-40px, 30px, 0) scale(1.08); }
+}
+@keyframes glow-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(50px, -25px, 0) scale(1.10); }
+}
+@keyframes glow-drift-c {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50%      { transform: translate(-50%, -40px) scale(1.06); }
+}
+@keyframes mesh-shift {
+  0%   { background-position: 0% 0%, 100% 100%, 50% 100%; }
+  50%  { background-position: 30% 20%, 70% 80%, 60% 40%; }
+  100% { background-position: 0% 0%, 100% 100%, 50% 100%; }
+}
+
+.animate-glow-drift-a { animation: glow-drift-a 18s ease-in-out infinite; }
+.animate-glow-drift-b { animation: glow-drift-b 22s ease-in-out infinite; }
+.animate-glow-drift-c { animation: glow-drift-c 26s ease-in-out infinite; }
+.animate-mesh-shift   { animation: mesh-shift 30s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow-drift-a,
+  .animate-glow-drift-b,
+  .animate-glow-drift-c,
+  .animate-mesh-shift { animation: none !important; }
+}
+
+/* ─── Premium reusable utilities (visitor dark UI) ───────── */
+@layer components {
+  /* Glassmorphism card base */
+  .glass-card {
+    background: linear-gradient(140deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px -12px rgba(0,0,0,0.45);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-card:hover {
+    border-color: rgba(34, 211, 238, 0.25);
+    box-shadow:
+      0 20px 50px -15px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(34,211,238,0.15),
+      0 0 40px -10px rgba(34,211,238,0.25);
+    transform: translateY(-4px);
+  }
+
+  /* Subtle elevation on hover (use anywhere) */
+  .hover-lift {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 18px 40px -14px rgba(0,0,0,0.5);
+  }
+
+  /* Cyan glow on hover */
+  .hover-glow-cyan:hover {
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.3), 0 0 30px -4px rgba(34,211,238,0.35);
+  }
+  .hover-glow-blue:hover {
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 0 30px -4px rgba(59,130,246,0.35);
+  }
+  .hover-glow-amber:hover {
+    box-shadow: 0 0 0 1px rgba(245,158,11,0.35), 0 0 30px -4px rgba(245,158,11,0.4);
+  }
+
+  /* Premium nav link with animated underline */
+  .nav-link-premium {
+    position: relative;
+    transition: all 0.3s ease-out;
+  }
+  .nav-link-premium::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 6px;
+    height: 1.5px;
+    background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.9), rgba(34,211,238,0));
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nav-link-premium:hover::after,
+  .nav-link-premium[data-active="true"]::after {
+    transform: scaleX(1);
+  }
+
+  /* Premium primary button (cyan glow gradient) */
+  .btn-premium {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.625rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 4px 14px -4px rgba(34,211,238,0.4);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-premium:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      0 8px 24px -6px rgba(34,211,238,0.55),
+      0 0 0 1px rgba(255,255,255,0.18);
+  }
+  .btn-premium:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Auto-enhance any glass card inside visitor area with premium hover.
+     Scoped to .visitor-area so it never affects admin or auth pages. */
+  .visitor-area [class~="backdrop-blur-xl"][class*="border"][class*="rounded-xl"],
+  .visitor-area [class~="backdrop-blur-xl"][class*="border"][class*="rounded-2xl"] {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.35s ease-out;
+  }
+  .visitor-area [class~="backdrop-blur-xl"][class*="border"][class*="rounded-xl"]:hover,
+  .visitor-area [class~="backdrop-blur-xl"][class*="border"][class*="rounded-2xl"]:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34, 211, 238, 0.3) !important;
+    box-shadow:
+      0 20px 45px -15px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(34, 211, 238, 0.18),
+      0 0 35px -10px rgba(34, 211, 238, 0.28);
+  }
+
+  /* Auto-enhance buttons & links inside visitor area */
+  .visitor-area button:not(:disabled),
+  .visitor-area a {
+    transition-property: transform, color, background-color, border-color, box-shadow, opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Sheen animated border for accent cards */
+  .border-sheen {
+    position: relative;
+    background-clip: padding-box;
+  }
+  .border-sheen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(120deg, rgba(34,211,238,0.5), rgba(99,102,241,0.4), rgba(255,255,255,0.05));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+/* ─── Landing page (premium dark) ───────────────────────── */
+@keyframes landing-blob-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-50px, 40px, 0) scale(1.08); }
+}
+@keyframes landing-blob-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(60px, -35px, 0) scale(1.10); }
+}
+@keyframes landing-blob-c {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50%      { transform: translate(-50%, -50px) scale(1.06); }
+}
+@keyframes landing-mesh {
+  0%   { background-position: 0% 0%, 100% 100%, 50% 100%; }
+  50%  { background-position: 30% 25%, 70% 75%, 60% 40%; }
+  100% { background-position: 0% 0%, 100% 100%, 50% 100%; }
+}
+@keyframes landing-reveal-up {
+  0%   { opacity: 0; transform: translateY(28px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes landing-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes landing-particle-float {
+  0%   { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0; }
+  10%  { opacity: var(--peak, 0.5); }
+  50%  { transform: translate3d(var(--tx, 0), var(--ty, -100px), 0) scale(1.15); opacity: var(--peak, 0.5); }
+  90%  { opacity: var(--peak, 0.5); }
+  100% { transform: translate3d(calc(var(--tx, 0) * 1.2), calc(var(--ty, -100px) * 1.4), 0) scale(0.9); opacity: 0; }
+}
+
+.animate-landing-blob-a { animation: landing-blob-a 20s ease-in-out infinite; }
+.animate-landing-blob-b { animation: landing-blob-b 24s ease-in-out infinite; }
+.animate-landing-blob-c { animation: landing-blob-c 28s ease-in-out infinite; }
+.animate-landing-mesh   { animation: landing-mesh 32s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-landing-blob-a,
+  .animate-landing-blob-b,
+  .animate-landing-blob-c,
+  .animate-landing-mesh { animation: none !important; }
+}
+
+/* Scoped overrides — apply only inside .landing-area wrapper.
+   Tujuannya: ubah seluruh section (yang awalnya bg-white / abu)
+   menjadi transparan agar background premium global tampil tembus,
+   tanpa harus rewrite tiap file komponen. */
+@layer components {
+  .landing-area {
+    color: rgb(229 231 235); /* base text gray-200 */
+  }
+
+  /* Section: matikan background putih existing, pakai layer transparent */
+  .landing-area section {
+    background-color: transparent !important;
+    background-image: none !important;
+    color: rgb(229 231 235);
+  }
+
+  /* Heading & paragraph default → terang di dark */
+  .landing-area h1,
+  .landing-area h2,
+  .landing-area h3,
+  .landing-area h4 {
+    color: #ffffff;
+  }
+  .landing-area p {
+    color: rgb(203 213 225); /* slate-300 */
+  }
+
+  /* Card-like elements: glassmorphism premium */
+  .landing-area [class*="bg-white"]:not(button):not(a):not(.no-glass),
+  .landing-area [class*="bg-gray-50"],
+  .landing-area [class*="bg-gray-100"] {
+    background: linear-gradient(140deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%) !important;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgb(229 231 235);
+  }
+
+  /* Borders default → soft white */
+  .landing-area [class*="border-gray-"] {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+  }
+
+  /* Text colors: gelap → putih kebiruan */
+  .landing-area .text-primary,
+  .landing-area [class*="text-gray-700"],
+  .landing-area [class*="text-gray-800"],
+  .landing-area [class*="text-gray-900"],
+  .landing-area .text-neutral {
+    color: rgb(241 245 249) !important; /* slate-100 */
+  }
+  .landing-area [class*="text-gray-500"],
+  .landing-area [class*="text-gray-600"] {
+    color: rgb(203 213 225) !important; /* slate-300 */
+  }
+
+  /* Smooth interactive transitions */
+  .landing-area button:not(:disabled),
+  .landing-area a {
+    transition-property: transform, color, background-color, border-color, box-shadow, opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Cards rounded → tambahan hover lift + cyan glow */
+  .landing-area [class*="rounded-2xl"][class*="shadow"] {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .landing-area [class*="rounded-2xl"][class*="shadow"]:hover {
+    transform: translateY(-4px);
+    border-color: rgba(34, 211, 238, 0.30) !important;
+    box-shadow:
+      0 22px 50px -16px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(34, 211, 238, 0.18),
+      0 0 40px -10px rgba(34, 211, 238, 0.30);
+  }
+
+  /* Reveal-on-scroll utility (driven by IntersectionObserver) */
+  .landing-area .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+  }
+  .landing-area .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Premium primary button (cyan/blue gradient) for landing */
+  .btn-landing-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(120deg, #06b6d4 0%, #2563eb 50%, #7c3aed 100%);
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 8px 24px -8px rgba(34,211,238,0.5);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-landing-primary:hover {
+    background-position: 100% 0%;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+      0 14px 36px -10px rgba(34, 211, 238, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.22),
+      0 0 50px -8px rgba(124, 58, 237, 0.45);
+  }
+  .btn-landing-primary:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  /* Premium ghost button */
+  .btn-landing-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-landing-ghost:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(34, 211, 238, 0.45);
+    box-shadow: 0 0 30px -6px rgba(34, 211, 238, 0.4);
+  }
+}
+
+/* Print styles - hide sidebar/navbar */
+@media print {
+  nav, aside, .no-print { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+  body { background: white !important; }
+}
+

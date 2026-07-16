@@ -1,0 +1,26 @@
+{
+  "name": "Cable Crossover",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "cable",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+    "shoulders"
+  ],
+  "instructions": [
+    "Untuk masuk ke posisi awal, tempatkan katrol di posisi tinggi (di atas kepala), pilih resistensi yang akan digunakan dan pegang katrol di setiap tangan.",
+    "Langkah maju di depan garis lurus khayalan antara kedua katrol sambil menarik lenganmu bersama di depanmu. Tubuhmu harus sedikit menekuk ke depan dari pinggang. Ini akan menjadi posisi awalmu.",
+    "Dengan sedikit menekuk siku untuk mencegah tekanan pada tendon bisep, luruskan lenganmu ke samping (lurus ke kedua sisi) dalam busur lebar sampai kamu merasakan regangan di dada. Tarik napas saat kamu melakukan bagian gerakan ini. Tips: Ingat bahwa selama gerakan, lengan dan tubuh harus tetap diam; gerakan hanya harus terjadi di sendi bahu.",
+    "Kembalikan lenganmu ke posisi awal sambil menghembuskan napas. Pastikan untuk menggunakan busur gerakan yang sama seperti saat menurunkan beban.",
+    "Tahan selama satu detik di posisi awal dan ulangi gerakan untuk jumlah repetisi yang ditentukan."
+  ],
+  "category": "strength",
+  "images": [
+    "Cable_Crossover/0.jpg",
+    "Cable_Crossover/1.jpg"
+  ],
+  "id": "Cable_Crossover"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Push-Up Wide",
+  "force": null,
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+    "abdominals",
+    "shoulders",
+    "triceps"
+  ],
+  "instructions": [
+    "Dengan tanganmu lebar terpisah, dukung tubuhmu di ujung jari kaki dan tanganmu dalam posisi plank. Siku kamu harus lurus dan tubuhmu lurus. Jangan biarkan pinggulmu turun. Ini akan menjadi posisi awalmu.",
+    "Untuk memulai, biarkan siku menekuk, turunkan dada ke lantai sambil menarik napas.",
+    "Menggunakan otot dada kamu, tekan tubuh bagian atasmu kembali ke posisi awal dengan meluruskan siku. Hembuskan napas saat kamu melakukan langkah ini.",
+    "Setelah berhenti di posisi terkontraksi, ulangi gerakan untuk jumlah repetisi yang ditentukan."
+  ],
+  "category": "strength",
+  "images": [
+    "Push-Up_Wide/0.jpg",
+    "Push-Up_Wide/1.jpg"
+  ],
+  "id": "Push-Up_Wide"
+}

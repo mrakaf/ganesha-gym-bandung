@@ -1,0 +1,26 @@
+{
+  "name": "Dumbbell Flyes",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "dumbbell",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+
+  ],
+  "instructions": [
+    "Berbaring telentang di bangku datar dengan dumbbell di setiap tangan yang bertumpu di atas paha Anda. Telapak tangan Anda akan saling menghadap.",
+    "Kemudian gunakan paha Anda untuk membantu mengangkat dumbbell, angkat dumbbell satu per satu sehingga Anda dapat memegangnya di depan Anda dengan lebar bahu dengan telapak tangan saling menghadap. Angkat dumbbell ke atas seperti Anda menekannya, tapi berhenti dan tahan tepat sebelum Anda mengunci siku. Ini akan menjadi posisi awal Anda.",
+    "Dengan sedikit menekuk siku untuk mencegah tekanan pada tendon bisep, turunkan lengan Anda ke kedua sisi dalam busur lebar sampai Anda merasakan regangan di dada Anda. Tarik napas saat Anda melakukan bagian gerakan ini. Tips: Ingat bahwa selama gerakan, lengan harus tetap diam; gerakan hanya harus terjadi di sendi bahu.",
+    "Kembalikan lengan Anda ke posisi awal sambil meremas otot dada Anda dan menghembuskan napas. Tips: Pastikan untuk menggunakan busur gerakan yang sama seperti saat Anda menurunkan beban.",
+    "Tahan selama satu detik di posisi terkontraksi dan ulangi gerakan untuk jumlah repetisi yang ditentukan."
+  ],
+  "category": "strength",
+  "images": [
+    "Dumbbell_Flyes/0.jpg",
+    "Dumbbell_Flyes/1.jpg"
+  ],
+  "id": "Dumbbell_Flyes"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Barbell Bench Press - Medium Grip",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "barbell",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+    "shoulders",
+    "triceps"
+  ],
+  "instructions": [
+    "Berbaring telentang di bangku datar. Gunakan pegangan lebar sedang (pegangan yang membuat sudut 90 derajat di tengah gerakan antara lengan bawah dan lengan atas), angkat bar dari rak dan pegang lurus di atas Anda dengan lengan terkunci. Ini akan menjadi posisi awal Anda.",
+    "Dari posisi awal, tarik napas dan mulailah turun perlahan sampai bar menyentuh dada tengah Anda.",
+    "Setelah jeda singkat, dorong bar kembali ke posisi awal sambil menghembuskan napas. Fokus mendorong bar menggunakan otot dada Anda. Kunci lengan dan remas dada Anda di posisi terkontraksi di puncak gerakan, tahan selama satu detik lalu mulai turun perlahan lagi. Tips: Idealnya, menurunkan beban membutuhkan waktu sekitar dua kali lebih lama daripada mengangkatnya.",
+    "Ulangi gerakan untuk jumlah repetisi yang ditentukan.",
+    "Setelah selesai, letakkan bar kembali ke rak."
+  ],
+  "category": "strength",
+  "images": [
+    "Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+    "Barbell_Bench_Press_-_Medium_Grip/1.jpg"
+  ],
+  "id": "Barbell_Bench_Press_-_Medium_Grip"
+}

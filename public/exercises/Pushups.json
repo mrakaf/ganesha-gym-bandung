@@ -1,0 +1,26 @@
+{
+  "name": "Pushups",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+    "chest"
+  ],
+  "secondaryMuscles": [
+    "shoulders",
+    "triceps"
+  ],
+  "instructions": [
+    "Berbaring menghadap lantai dan letakkan tanganmu sekitar 90 cm terpisah sambil mengangkat tubuhmu dengan lengan lurus.",
+    "Selanjutnya, turunkan tubuhmu ke bawah sampai dada hampir menyentuh lantai sambil menarik napas.",
+    "Sekarang hembuskan napas dan tekan tubuh bagian atasmu kembali ke posisi awal sambil meremas dada.",
+    "Setelah jeda singkat di posisi terkontraksi atas, kamu bisa mulai menurunkan tubuhmu ke bawah lagi untuk repetisi sebanyak yang dibutuhkan."
+  ],
+  "category": "strength",
+  "images": [
+    "Pushups/0.jpg",
+    "Pushups/1.jpg"
+  ],
+  "id": "Pushups"
+}
