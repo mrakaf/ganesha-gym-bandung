@@ -1013,7 +1013,7 @@ export default function AdminDashboard() {
                 <div className="text-center py-12">
                   <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-600 font-poppins text-lg">Belum ada pengumuman yang dikirim</p>
-                  <p className="text-gray-500 font-poppins text-sm mt-2">Klik "Kirim Pengumuman" untuk membuat pengumuman pertama</p>
+                  <p className="text-gray-500 font-poppins text-sm mt-2">Klik &quot;Kirim Pengumuman&quot; untuk membuat pengumuman pertama</p>
                 </div>
               ) : (
                 <div className="space-y-4">

@@ -204,7 +204,7 @@ export default function MemberDetailPage() {
                       <p className="text-sm font-poppins text-gray-700 mb-2">{rec.message}</p>
                       <p className="text-sm font-poppins text-blue-600">
                         💡 Sistem akan otomatis mengirimkan email reminder kepada {member.name} ketika waktu yang ditentukan tiba. 
-                        Anda bisa melihat riwayat email yang terkirim di bagian "Riwayat Email Reminder" di bawah ini.
+                        Anda bisa melihat riwayat email yang terkirim di bagian &quot;Riwayat Email Reminder&quot; di bawah ini.
                       </p>
                     </div>
                   )
