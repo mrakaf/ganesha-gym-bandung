@@ -94,7 +94,7 @@ export class AdminRepository {
           _count: { select: { visits: true, payments: true } },
           visits: { take: 5, orderBy: { visitDate: 'desc' } },
           payments: { take: 5, orderBy: { createdAt: 'desc' } },
-          reminders: { orderBy: { createdAt: 'desc' } },
+          reminders: { orderBy: { sentAt: 'desc' } },
         },
       })
     } catch (error) {
