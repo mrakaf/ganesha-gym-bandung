@@ -303,8 +303,8 @@ export default function SchedulePage() {
       } else {
         error('Gagal memutuskan hubungan dengan Google Calendar')
       }
-    } catch (error) {
-      console.error('Error disconnecting Google Calendar:', error)
+    } catch (err) {
+      console.error('Error disconnecting Google Calendar:', err)
       error('Gagal memutuskan hubungan dengan Google Calendar')
     }
   }
