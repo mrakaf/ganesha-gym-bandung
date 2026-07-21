@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useCallback, useState, useEffect, useMemo, useRef } from 'react'
-import { Calendar, Clock, Plus, Trash2, Edit2, Dumbbell, Loader2, CheckCircle2, AlertCircle, ExternalLink, RefreshCw, CalendarDays, TrendingUp, Bell, MapPin, Sparkles, Zap } from 'lucide-react'
+import { Calendar, Clock, Plus, Trash2, Edit2, Dumbbell, Loader2, CheckCircle2, AlertCircle, AlertTriangle, ExternalLink, RefreshCw, CalendarDays, TrendingUp, Bell, MapPin, Sparkles, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getMemberSession, type MemberSession } from '@/lib/member-session'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
