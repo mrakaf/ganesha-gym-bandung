@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 
 import { useState, useEffect } from 'react'
-import { Search, Plus, X, CalendarDays, User, Edit, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { Search, Plus, X, CalendarDays, User, Edit, Trash2, CheckCircle2, AlertCircle, Loader2, Mail, Clock, Tag } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { useToast } from '@/components/ui/Toast'
@@ -106,8 +106,10 @@ export default function VisitsPage() {
     console.log('Building export config with data:', data)
     const rows = data.map((v) => ({
       name: v.visitorName || v.member?.name || '-',
+      email: v.member?.email || '-',
       tanggal: formatDate(v.visitDate),
       waktuKunjungan: formatDate(v.createdAt, true),
+      status: v.checkInStatus,
       catatan: v.notes || '-',
     }))
     console.log('Export rows:', rows)
@@ -116,10 +118,12 @@ export default function VisitsPage() {
       subtitle: search ? `Pencarian: ${search}` : undefined,
       filename: 'kunjungan-report',
       columns: [
-        { header: 'Nama', key: 'name', width: 45 },
-        { header: 'Tanggal Kunjungan', key: 'tanggal', width: 30 },
-        { header: 'Waktu Kunjungan', key: 'waktuKunjungan', width: 35 },
-        { header: 'Catatan', key: 'catatan', width: 40 },
+        { header: 'Nama', key: 'name', width: 40 },
+        { header: 'Email', key: 'email', width: 45 },
+        { header: 'Tanggal', key: 'tanggal', width: 25 },
+        { header: 'Waktu', key: 'waktuKunjungan', width: 20 },
+        { header: 'Status', key: 'status', width: 20 },
+        { header: 'Catatan', key: 'catatan', width: 35 },
       ],
       data: rows,
     }
@@ -307,8 +311,8 @@ export default function VisitsPage() {
         setCreateEmail('')
         setCreateAmount('25000')
         setCreatePaymentMethod('cash')
-        setCreatePaidAt(new Date().toISOString().split('T')[0])
-        setCreateVisitDate(new Date().toISOString().split('T')[0])
+        setCreatePaidAt(getTodayDate())
+        setCreateVisitDate(getTodayDate())
         setCreateVisitTime('')
         setCreateNotes('')
         fetchVisits()
@@ -324,21 +328,32 @@ export default function VisitsPage() {
     }
   }
 
-
-
-
+  // Helper for status badge
+  const StatusBadge = ({ status }: { status: string }) => {
+    const isCheckedIn = status === 'CHECKED_IN'
+    return (
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+        isCheckedIn 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-yellow-100 text-yellow-800'
+      }`}>
+        {isCheckedIn ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+        {isCheckedIn ? 'Sudah Check-in' : 'Pending'}
+      </span>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-fade-in rounded-3xl border border-sky-100/80 bg-gradient-to-br from-sky-50 via-white to-indigo-50/40 p-3 sm:p-4 md:p-5">
       
-      <div className="relative rounded-2xl border border-slate-200/80 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 shadow-md">
-        <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_45%)]" />
+      <div className="relative rounded-2xl border border-slate-200/80 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-md">
+        <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_45%)]" />
         <div className="p-5 md:p-6 relative z-10">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-oswald font-bold text-white drop-shadow-sm">Data Kunjungan</h1>
               <p className="mt-1 text-sm md:text-base text-white/90 font-poppins">
-                Kelola dan catat semua kunjungan member dan pengunjung gym.
+                Kelola dan catat semua kunjungan member dan pengunjung gym dengan tampilan modern.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -349,7 +364,7 @@ export default function VisitsPage() {
               />
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/30 px-4 py-2.5 text-sm font-poppins font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:bg-white/25 hover:scale-[1.03] active:scale-[0.97]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/40 px-4 py-2.5 text-sm font-poppins font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:bg-white/30 hover:scale-[1.03] active:scale-[0.97]"
               >
                 <Plus className="w-4 h-4" />
                 Tambah Kunjungan
@@ -371,7 +386,7 @@ export default function VisitsPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/80 focus:border-accent font-poppins text-gray-900 bg-gray-50/80 placeholder:text-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/80 focus:border-emerald-500 font-poppins text-gray-900 bg-gray-50/80 placeholder:text-gray-400"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -384,7 +399,7 @@ export default function VisitsPage() {
                   setStartDate(e.target.value)
                   setPage(1)
                 }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/80 focus:border-accent font-poppins text-gray-900 bg-gray-50/80"
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/80 focus:border-emerald-500 font-poppins text-gray-900 bg-gray-50/80"
               />
             </div>
           </div>
@@ -398,7 +413,7 @@ export default function VisitsPage() {
                   setEndDate(e.target.value)
                   setPage(1)
                 }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/80 focus:border-accent font-poppins text-gray-900 bg-gray-50/80"
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/80 focus:border-emerald-500 font-poppins text-gray-900 bg-gray-50/80"
               />
             </div>
           </div>
@@ -407,7 +422,7 @@ export default function VisitsPage() {
           <button
             type="button"
             onClick={applyTodayFilter}
-            className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r from-accent to-accent-light text-white text-sm font-poppins font-semibold shadow-sm transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-poppins font-semibold shadow-sm transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
           >
             <CalendarDays className="w-4 h-4" />
             Hari Ini
@@ -429,7 +444,7 @@ export default function VisitsPage() {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Loader2 className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <Loader2 className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-gray-600 font-poppins">Memuat data...</p>
             </div>
           </div>
@@ -447,21 +462,31 @@ export default function VisitsPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Nama</th>
-                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Tanggal Kunjungan</th>
-                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Waktu Kunjungan</th>
+                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Email</th>
+                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Tanggal</th>
+                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Waktu</th>
+                    <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700">Catatan</th>
                     <th className="text-left py-3 px-4 text-sm font-poppins font-semibold text-gray-700 min-w-[9rem]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visits.map((visit) => (
-                    <tr key={visit.id} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-colors">
+                    <tr key={visit.id} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50/50 transition-colors">
                       <td className="py-3 px-4">
-                        <div className="font-poppins text-sm text-gray-900">
+                        <div className="font-poppins text-sm font-medium text-gray-900">
                           {visit.visitorName || visit.member?.name || '-'}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="font-poppins text-sm text-gray-600">
+                            {visit.member?.email || '—'}
+                          </span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -474,6 +499,9 @@ export default function VisitsPage() {
                           {formatDate(visit.createdAt, true)}
                         </span>
                       </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={visit.checkInStatus} />
+                      </td>
                       <td className="py-3 px-4 align-top">
                         <span className="font-poppins text-sm text-gray-600">
                           {visit.notes || '—'}
@@ -484,7 +512,7 @@ export default function VisitsPage() {
                           <button
                             type="button"
                             onClick={() => openEditModal(visit)}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-poppins font-semibold px-3 py-2 transition-colors w-full"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-poppins font-semibold px-3 py-2 transition-colors w-full"
                           >
                             <Edit className="w-3.5 h-3.5" />
                             Edit
@@ -536,9 +564,9 @@ export default function VisitsPage() {
       {/* Edit Modal */}
       {showEditModal && editingVisit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-oswald font-bold text-gray-900">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-oswald font-bold text-white">
                 Edit Kunjungan
               </h3>
               <button
@@ -546,66 +574,68 @@ export default function VisitsPage() {
                   setShowEditModal(false)
                   setEditingVisit(null)
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-white/80 hover:text-white transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 space-y-3">
               <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
                   Nama Pengunjung
                 </label>
                 <input
                   type="text"
                   value={editName}
                   disabled
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-gray-100 cursor-not-allowed"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-gray-100 cursor-not-allowed text-sm"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Tanggal Kunjungan
-                </label>
-                <input
-                  type="date"
-                  value={editVisitDate}
-                  onChange={(e) => setEditVisitDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Tanggal
+                  </label>
+                  <input
+                    type="date"
+                    value={editVisitDate}
+                    onChange={(e) => setEditVisitDate(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Waktu
+                  </label>
+                  <input
+                    type="time"
+                    value={editVisitTime}
+                    onChange={(e) => setEditVisitTime(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Waktu Kunjungan
-                </label>
-                <input
-                  type="time"
-                  value={editVisitTime}
-                  onChange={(e) => setEditVisitTime(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
                   Catatan
                 </label>
                 <textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   placeholder="Masukkan catatan tambahan..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                  rows={3}
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  rows={2}
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowEditModal(false)
                     setEditingVisit(null)
                   }}
-                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-poppins text-sm font-medium"
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-poppins text-sm font-medium"
                 >
                   Batal
                 </button>
@@ -613,9 +643,9 @@ export default function VisitsPage() {
                   type="button"
                   onClick={saveEdit}
                   disabled={submitting}
-                  className="px-5 py-2.5 bg-gradient-to-r from-accent to-accent-light text-white rounded-xl hover:shadow-md disabled:opacity-60 font-poppins text-sm font-semibold"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-md disabled:opacity-60 font-poppins text-sm font-semibold"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  {submitting ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>
             </div>
@@ -626,30 +656,30 @@ export default function VisitsPage() {
       {/* Delete Modal */}
       {showDeleteModal && deletingVisit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-7 max-w-sm w-full mx-4">
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600" />
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-7 h-7 text-red-600" />
               </div>
-              <h3 className="text-xl font-oswald font-bold text-gray-900 mb-3">Hapus Kunjungan?</h3>
-              <p className="text-gray-600 mb-6 font-poppins">
+              <h3 className="text-lg font-oswald font-bold text-gray-900 mb-2">Hapus Kunjungan?</h3>
+              <p className="text-gray-600 mb-5 font-poppins text-sm">
                 Apakah Anda yakin ingin menghapus kunjungan dari{" "}
                 <strong>{deletingVisit.visitorName || deletingVisit.member?.name}</strong>?
               </p>
-              <div className="flex justify-center space-x-4">
+              <div className="flex justify-center space-x-3">
                 <button
                   onClick={() => {
                     setShowDeleteModal(false)
                     setDeletingVisit(null)
                   }}
-                  className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors font-poppins text-sm font-medium"
+                  className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors font-poppins text-sm font-medium"
                 >
                   Batal
                 </button>
                 <button
                   onClick={executeDelete}
                   disabled={submitting}
-                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-poppins text-sm font-semibold shadow-md hover:shadow-lg disabled:opacity-60"
+                  className="px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-poppins text-sm font-semibold shadow-md hover:shadow-lg disabled:opacity-60"
                 >
                   {submitting ? 'Menghapus...' : 'Ya, Hapus'}
                 </button>
@@ -662,121 +692,131 @@ export default function VisitsPage() {
       {/* Create Visit Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-oswald font-bold text-gray-900">
-                Catat Kunjungan Manual
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-oswald font-bold text-white">
+                Catat Kunjungan Baru
               </h3>
               <button
                 onClick={() => {
                   setShowCreateModal(false)
                   setCreateName('')
+                  setCreateEmail('')
+                  setCreateAmount('25000')
+                  setCreatePaymentMethod('cash')
+                  setCreatePaidAt(getTodayDate())
                   setCreateVisitDate(getTodayDate())
                   setCreateVisitTime('')
                   setCreateNotes('')
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-white/80 hover:text-white transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateVisit} className="p-6 space-y-4">
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Nama Pengunjung
-        </label>
-        <input
-          type="text"
-          value={createName}
-          onChange={(e) => setCreateName(e.target.value)}
-          placeholder="Masukkan nama pengunjung"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Email Pengunjung (Opsional)
-        </label>
-        <input
-          type="email"
-          value={createEmail}
-          onChange={(e) => setCreateEmail(e.target.value)}
-          placeholder="Masukkan email pengunjung"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Jumlah Pembayaran
-        </label>
-        <input
-          type="number"
-          value={createAmount}
-          onChange={(e) => setCreateAmount(e.target.value)}
-          placeholder="Masukkan jumlah pembayaran"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Metode Pembayaran
-        </label>
-        <select
-          value={createPaymentMethod}
-          onChange={(e) => setCreatePaymentMethod(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        >
-          <option value="cash">Tunai (Cash)</option>
-          <option value="qris">QRIS</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Tanggal Pembayaran
-        </label>
-        <input
-          type="date"
-          value={createPaidAt}
-          onChange={(e) => setCreatePaidAt(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Tanggal Kunjungan
-        </label>
-        <input
-          type="date"
-          value={createVisitDate}
-          onChange={(e) => setCreateVisitDate(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Waktu Kunjungan
-        </label>
-        <input
-          type="time"
-          value={createVisitTime}
-          onChange={(e) => setCreateVisitTime(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-          Catatan
-        </label>
-        <textarea
-          value={createNotes}
-          onChange={(e) => setCreateNotes(e.target.value)}
-          placeholder="Masukkan catatan tambahan..."
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-          rows={3}
-        />
-      </div>
-              <div className="flex justify-end gap-3 pt-2">
+            <form onSubmit={handleCreateVisit} className="p-5 space-y-3">
+              <div>
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                  Nama Pengunjung
+                </label>
+                <input
+                  type="text"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  placeholder="Masukkan nama"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                  Email (Opsional)
+                </label>
+                <input
+                  type="email"
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                  placeholder="email@example.com"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Jumlah Bayar
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-poppins text-sm">Rp</span>
+                    <input
+                      type="number"
+                      value={createAmount}
+                      onChange={(e) => setCreateAmount(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Metode
+                  </label>
+                  <select
+                    value={createPaymentMethod}
+                    onChange={(e) => setCreatePaymentMethod(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  >
+                    <option value="cash">Tunai</option>
+                    <option value="qris">QRIS</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Tgl Bayar
+                  </label>
+                  <input
+                    type="date"
+                    value={createPaidAt}
+                    onChange={(e) => setCreatePaidAt(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                    Tgl Kunjungan
+                  </label>
+                  <input
+                    type="date"
+                    value={createVisitDate}
+                    onChange={(e) => setCreateVisitDate(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                  Waktu Kunjungan (Opsional)
+                </label>
+                <input
+                  type="time"
+                  value={createVisitTime}
+                  onChange={(e) => setCreateVisitTime(e.target.value)}
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                  Catatan
+                </label>
+                <textarea
+                  value={createNotes}
+                  onChange={(e) => setCreateNotes(e.target.value)}
+                  placeholder="Catatan tambahan..."
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  rows={2}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -785,21 +825,21 @@ export default function VisitsPage() {
                     setCreateEmail('')
                     setCreateAmount('25000')
                     setCreatePaymentMethod('cash')
-                    setCreatePaidAt(new Date().toISOString().split('T')[0])
-                    setCreateVisitDate(new Date().toISOString().split('T')[0])
+                    setCreatePaidAt(getTodayDate())
+                    setCreateVisitDate(getTodayDate())
                     setCreateVisitTime('')
                     setCreateNotes('')
                   }}
-                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-poppins text-sm font-medium"
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-poppins text-sm font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 bg-gradient-to-r from-accent to-accent-light text-white rounded-xl hover:shadow-md disabled:opacity-60 font-poppins text-sm font-semibold"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-md disabled:opacity-60 font-poppins text-sm font-semibold"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Kunjungan'}
+                  {submitting ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>
             </form>
