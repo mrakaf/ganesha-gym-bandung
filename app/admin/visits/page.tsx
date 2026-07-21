@@ -67,11 +67,6 @@ export default function VisitsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createName, setCreateName] = useState('')
   const [createEmail, setCreateEmail] = useState('')
-  const [createAmount, setCreateAmount] = useState('25000')
-  const [createPaymentMethod, setCreatePaymentMethod] = useState('cash')
-  const [createPaidAt, setCreatePaidAt] = useState(getTodayDate())
-  const [createVisitDate, setCreateVisitDate] = useState(getTodayDate())
-  const [createVisitTime, setCreateVisitTime] = useState('')
   const [createNotes, setCreateNotes] = useState('')
 
   // Submitting state
@@ -279,17 +274,7 @@ export default function VisitsPage() {
     
     setSubmitting(true)
     try {
-      // Combine date and time for visitDate
-      const [year, month, day] = createVisitDate.split('-').map(Number)
-      let hours, minutes
-      if (createVisitTime) {
-        [hours, minutes] = createVisitTime.split(':').map(Number)
-      } else {
-        const now = new Date()
-        hours = now.getHours()
-        minutes = now.getMinutes()
-      }
-      const combinedDate = new Date(year, month - 1, day, hours, minutes)
+      const now = new Date()
       
       const response = await fetch('/api/admin/visits', {
         method: 'POST',
@@ -297,10 +282,10 @@ export default function VisitsPage() {
         body: JSON.stringify({
           name: createName,
           email: createEmail || null,
-          amount: createAmount,
-          paymentMethod: createPaymentMethod,
-          paidAt: createPaidAt,
-          visitDate: combinedDate.toISOString(),
+          amount: 25000,
+          paymentMethod: 'cash',
+          paidAt: now.toISOString(),
+          visitDate: now.toISOString(),
           notes: createNotes,
         }),
       })
@@ -310,11 +295,6 @@ export default function VisitsPage() {
         setShowCreateModal(false)
         setCreateName('')
         setCreateEmail('')
-        setCreateAmount('25000')
-        setCreatePaymentMethod('cash')
-        setCreatePaidAt(getTodayDate())
-        setCreateVisitDate(getTodayDate())
-        setCreateVisitTime('')
         setCreateNotes('')
         fetchVisits()
       } else {
@@ -703,11 +683,6 @@ export default function VisitsPage() {
                   setShowCreateModal(false)
                   setCreateName('')
                   setCreateEmail('')
-                  setCreateAmount('25000')
-                  setCreatePaymentMethod('cash')
-                  setCreatePaidAt(getTodayDate())
-                  setCreateVisitDate(getTodayDate())
-                  setCreateVisitTime('')
                   setCreateNotes('')
                 }}
                 className="text-white/80 hover:text-white transition-colors"
@@ -741,70 +716,6 @@ export default function VisitsPage() {
                   className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                    Jumlah Bayar
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-poppins text-sm">Rp</span>
-                    <input
-                      type="number"
-                      value={createAmount}
-                      onChange={(e) => setCreateAmount(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                    Metode
-                  </label>
-                  <select
-                    value={createPaymentMethod}
-                    onChange={(e) => setCreatePaymentMethod(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
-                  >
-                    <option value="cash">Tunai</option>
-                    <option value="qris">QRIS</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                    Tgl Bayar
-                  </label>
-                  <input
-                    type="date"
-                    value={createPaidAt}
-                    onChange={(e) => setCreatePaidAt(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                    Tgl Kunjungan
-                  </label>
-                  <input
-                    type="date"
-                    value={createVisitDate}
-                    onChange={(e) => setCreateVisitDate(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                  Waktu Kunjungan (Opsional)
-                </label>
-                <input
-                  type="time"
-                  value={createVisitTime}
-                  onChange={(e) => setCreateVisitTime(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
-                />
-              </div>
               <div>
                 <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
                   Catatan
@@ -824,11 +735,6 @@ export default function VisitsPage() {
                     setShowCreateModal(false)
                     setCreateName('')
                     setCreateEmail('')
-                    setCreateAmount('25000')
-                    setCreatePaymentMethod('cash')
-                    setCreatePaidAt(getTodayDate())
-                    setCreateVisitDate(getTodayDate())
-                    setCreateVisitTime('')
                     setCreateNotes('')
                   }}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-poppins text-sm font-medium"
