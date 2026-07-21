@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server'
-import { cookies } from 'next/headers'
 import { AppError } from '@/src/models/app-error'
 import { GoogleCalendarService } from '@/src/services/google-calendar-service'
 import { BaseController } from '@/src/controllers/base-controller'
@@ -24,19 +23,28 @@ export class CalendarEventController extends BaseController {
         timeMax: searchParams.get('timeMax') || undefined,
         maxResults: parseInt(searchParams.get('maxResults') || '50'),
       }
-      const cookieStore = await cookies()
-      const events = await this.calendarService.listEvents({ ...query, cookieStore })
+      const events = await this.calendarService.listEvents(query)
       return this.json({ success: true, events, count: events.length })
     } catch (error: any) {
       return this.handleCalendarError(error, 'Error fetching Google Calendar events:', 'Gagal mengambil events dari Google Calendar')
     }
   }
 
+  async check(request: NextRequest) {
+    try {
+      const searchParams = request.nextUrl.searchParams
+      const email = searchParams.get('email') || ''
+      const connected = await this.calendarService.checkConnection(email)
+      return this.json({ success: true, connected })
+    } catch (error: any) {
+      return this.handleCalendarError(error, 'Error checking Google Calendar connection:', 'Gagal memeriksa koneksi Google Calendar')
+    }
+  }
+
   async create(request: NextRequest) {
     try {
       const body = (await request.json()) as CalendarCreateEventInput
-      const cookieStore = await cookies()
-      const result = await this.calendarService.createEvent({ ...body, cookieStore })
+      const result = await this.calendarService.createEvent(body)
       return this.json({ success: true, duplicate: result.duplicate, event: result.event })
     } catch (error: any) {
       return this.handleCalendarError(error, 'Error creating Google Calendar event:', 'Gagal membuat event di Google Calendar')
@@ -46,8 +54,7 @@ export class CalendarEventController extends BaseController {
   async update(request: NextRequest) {
     try {
       const body = (await request.json()) as CalendarUpdateEventInput
-      const cookieStore = await cookies()
-      const event = await this.calendarService.updateEvent({ ...body, cookieStore })
+      const event = await this.calendarService.updateEvent(body)
       return this.json({ success: true, event })
     } catch (error: any) {
       if (error?.code === 404) {
@@ -64,8 +71,7 @@ export class CalendarEventController extends BaseController {
         email: searchParams.get('email') || '',
         eventId: searchParams.get('eventId') || '',
       }
-      const cookieStore = await cookies()
-      await this.calendarService.deleteEvent({ ...payload, cookieStore })
+      await this.calendarService.deleteEvent(payload)
       return this.json({ success: true, message: 'Event berhasil dihapus dari Google Calendar' })
     } catch (error: any) {
       if (error?.code === 404) {
@@ -80,12 +86,6 @@ export class CalendarEventController extends BaseController {
       return this.json({ error: error.message }, { status: error.statusCode })
     }
     console.error(logLabel, error)
-    if (error?.code === 401 || error?.message?.includes('Invalid Credentials')) {
-      const cookieStore = await cookies()
-      cookieStore.delete('google_access_token')
-      cookieStore.delete('google_refresh_token')
-      return this.json({ error: 'Session expired. Silakan login ulang ke Google Calendar.' }, { status: 401 })
-    }
     return this.json({ error: fallbackMessage, details: error?.message }, { status: 500 })
   }
 }

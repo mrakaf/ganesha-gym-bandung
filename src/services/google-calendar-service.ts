@@ -9,16 +9,9 @@ import {
   CalendarUpdateEventInput,
 } from '@/src/models/calendar-event'
 
-type CookieGetter = {
-  get(name: string): { value: string } | undefined
-}
-
 export class GoogleCalendarService {
-  async listEvents(params: {
-    cookieStore: CookieGetter
-  } & CalendarListEventsQuery) {
-    await this.ensurePremiumAccess(params.email)
-    const calendar = this.createCalendarClient(params.cookieStore)
+  async listEvents(params: CalendarListEventsQuery) {
+    const { member, calendar } = await this.getMemberAndClient(params.email)
     const response = await calendar.events.list({
       calendarId: 'primary',
       timeMin: params.timeMin || new Date().toISOString(),
@@ -39,14 +32,11 @@ export class GoogleCalendarService {
     }))
   }
 
-  async createEvent(params: {
-    cookieStore: CookieGetter
-  } & CalendarCreateEventInput) {
-    await this.ensurePremiumAccess(params.email)
+  async createEvent(params: CalendarCreateEventInput) {
+    const { member, calendar } = await this.getMemberAndClient(params.email)
     if (!params.title || !params.start || !params.end) {
       throw new AppError('Title, start, dan end wajib diisi', 400)
     }
-    const calendar = this.createCalendarClient(params.cookieStore)
 
     if (params.idempotencyKey) {
       const existing = await calendar.events.list({
@@ -104,14 +94,11 @@ export class GoogleCalendarService {
     }
   }
 
-  async updateEvent(params: {
-    cookieStore: CookieGetter
-  } & CalendarUpdateEventInput) {
-    await this.ensurePremiumAccess(params.email)
+  async updateEvent(params: CalendarUpdateEventInput) {
+    const { member, calendar } = await this.getMemberAndClient(params.email)
     if (!params.eventId || !params.title || !params.start || !params.end) {
       throw new AppError('EventId, title, start, dan end wajib diisi', 400)
     }
-    const calendar = this.createCalendarClient(params.cookieStore)
     const response = await calendar.events.update({
       calendarId: 'primary',
       eventId: params.eventId,
@@ -140,30 +127,41 @@ export class GoogleCalendarService {
     }
   }
 
-  async deleteEvent(params: { cookieStore: CookieGetter } & CalendarDeleteEventInput) {
-    await this.ensurePremiumAccess(params.email)
+  async deleteEvent(params: CalendarDeleteEventInput) {
+    const { member, calendar } = await this.getMemberAndClient(params.email)
     if (!params.eventId) throw new AppError('EventId wajib diisi', 400)
-    const calendar = this.createCalendarClient(params.cookieStore)
     await calendar.events.delete({ calendarId: 'primary', eventId: params.eventId })
   }
 
-  private async ensurePremiumAccess(email: string) {
+  async checkConnection(email: string): Promise<boolean> {
+    try {
+      await this.getMemberAndClient(email)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  private async getMemberAndClient(email: string) {
     if (!email) throw new AppError('Akses ditolak. Email user wajib dikirim.', 401)
     const member = await prisma.member.findUnique({
       where: { email },
-      select: { membershipEnd: true, accessType: true, accessStart: true, accessEnd: true },
+      select: { 
+        membershipEnd: true, 
+        accessType: true, 
+        accessStart: true, 
+        accessEnd: true,
+        googleAccessToken: true,
+        googleRefreshToken: true,
+      },
     })
     if (!member || !hasPremiumAccess(member)) {
       throw new AppError('Fitur Google Calendar hanya untuk member/visit aktif.', 403)
     }
-  }
-
-  private createCalendarClient(cookieStore: CookieGetter) {
-    const accessToken = cookieStore.get('google_access_token')?.value
-    const refreshToken = cookieStore.get('google_refresh_token')?.value
-    if (!accessToken && !refreshToken) {
+    if (!member.googleAccessToken && !member.googleRefreshToken) {
       throw new AppError('Belum terhubung dengan Google Calendar. Silakan login terlebih dahulu.', 401)
     }
+
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback'
@@ -173,10 +171,10 @@ export class GoogleCalendarService {
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
     oauth2Client.setCredentials({
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token: member.googleAccessToken,
+      refresh_token: member.googleRefreshToken,
     })
-    return google.calendar({ version: 'v3', auth: oauth2Client })
+    return { member, calendar: google.calendar({ version: 'v3', auth: oauth2Client }) }
   }
 }
 

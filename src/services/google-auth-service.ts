@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { prisma } from '@/lib/db'
 import { AppError } from '@/src/models/app-error'
 import { GoogleAuthCallbackInput, GoogleAuthStartResult } from '@/src/models/google-auth'
 
@@ -20,7 +21,7 @@ export class GoogleAuthService {
     return new google.auth.OAuth2(clientId, clientSecret, redirectUri)
   }
 
-  getAuthorizationUrl(): GoogleAuthStartResult {
+  getAuthorizationUrl(email: string): GoogleAuthStartResult {
     const oauth2Client = this.getOAuthClient()
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
@@ -33,12 +34,15 @@ export class GoogleAuthService {
     return { authUrl }
   }
 
-  async exchangeCode(input: GoogleAuthCallbackInput) {
+  async exchangeCode(input: GoogleAuthCallbackInput & { email?: string }) {
     if (input.error) {
       return { redirectTo: `${this.getAppUrl()}/visitor/schedule?error=auth_failed` }
     }
     if (!input.code) {
       return { redirectTo: `${this.getAppUrl()}/visitor/schedule?error=no_code` }
+    }
+    if (!input.email) {
+      return { redirectTo: `${this.getAppUrl()}/visitor/schedule?error=no_email` }
     }
 
     try {
@@ -47,14 +51,35 @@ export class GoogleAuthService {
       if (!tokens.access_token) {
         return { redirectTo: `${this.getAppUrl()}/visitor/schedule?error=no_token` }
       }
+
+      // Simpan token ke database
+      await prisma.member.update({
+        where: { email: input.email },
+        data: {
+          googleAccessToken: tokens.access_token,
+          googleRefreshToken: tokens.refresh_token || undefined,
+        },
+      })
+
       return {
         redirectTo: `${this.getAppUrl()}/visitor/schedule?success=connected`,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
       }
-    } catch {
+    } catch (error) {
+      console.error('Error exchanging code:', error)
       return { redirectTo: `${this.getAppUrl()}/visitor/schedule?error=callback_failed` }
     }
+  }
+
+  async disconnect(email: string) {
+    await prisma.member.update({
+      where: { email },
+      data: {
+        googleAccessToken: null,
+        googleRefreshToken: null,
+      },
+    })
   }
 }
 

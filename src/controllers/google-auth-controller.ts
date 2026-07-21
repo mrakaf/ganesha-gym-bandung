@@ -9,9 +9,24 @@ export class GoogleAuthController extends BaseController {
     super()
   }
 
-  async authorize() {
+  async authorize(request: NextRequest) {
     try {
-      const { authUrl } = this.authService.getAuthorizationUrl()
+      const searchParams = request.nextUrl.searchParams
+      const email = searchParams.get('email')
+      if (!email) {
+        throw new AppError('Email parameter wajib diisi', 400)
+      }
+
+      const { authUrl } = this.authService.getAuthorizationUrl(email)
+      const cookieStore = await cookies()
+      // Simpan email di cookie temporary untuk callback nanti
+      cookieStore.set('oauth_member_email', email, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 10, // 10 menit
+        path: '/',
+      })
       return NextResponse.redirect(authUrl)
     } catch (error) {
       if (error instanceof AppError) {
@@ -22,33 +37,41 @@ export class GoogleAuthController extends BaseController {
   }
 
   async callback(request: NextRequest) {
+    const cookieStore = await cookies()
     const searchParams = request.nextUrl.searchParams
+    const email = cookieStore.get('oauth_member_email')?.value
+
     const result = await this.authService.exchangeCode({
       code: searchParams.get('code'),
       error: searchParams.get('error'),
+      email,
     })
 
-    if (result.accessToken) {
-      const cookieStore = await cookies()
-      cookieStore.set('google_access_token', result.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60,
-        path: '/',
-      })
-      if (result.refreshToken) {
-        cookieStore.set('google_refresh_token', result.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 30,
-          path: '/',
-        })
-      }
-    }
+    // Hapus cookie temporary
+    cookieStore.delete('oauth_member_email')
+    // Hapus cookie token lama (jika ada)
+    cookieStore.delete('google_access_token')
+    cookieStore.delete('google_refresh_token')
 
     return NextResponse.redirect(result.redirectTo)
+  }
+
+  async disconnect(request: NextRequest) {
+    try {
+      const searchParams = request.nextUrl.searchParams
+      const email = searchParams.get('email')
+      if (!email) {
+        throw new AppError('Email parameter wajib diisi', 400)
+      }
+
+      await this.authService.disconnect(email)
+      return this.json({ success: true })
+    } catch (error) {
+      if (error instanceof AppError) {
+        return this.json({ error: error.message }, { status: error.statusCode })
+      }
+      return this.handleError(error, 'Error disconnecting Google Calendar:', 'Gagal memutuskan koneksi Google Calendar')
+    }
   }
 }
 

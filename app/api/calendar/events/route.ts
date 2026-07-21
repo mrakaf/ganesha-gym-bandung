@@ -12,6 +12,13 @@ import { CalendarEventController } from '@/src/controllers/calendar-event-contro
 const calendarEventController = new CalendarEventController()
 
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const action = searchParams.get('action')
+  
+  if (action === 'check') {
+    return calendarEventController.check(request)
+  }
+  
   return calendarEventController.list(request)
 }
 

@@ -241,10 +241,13 @@ export default function SchedulePage() {
   const checkConnection = async () => {
     try {
       if (!identityEmail) return
-      const response = await fetch(`/api/calendar/events?email=${encodeURIComponent(identityEmail)}&maxResults=1`)
+      const response = await fetch(`/api/calendar/events?action=check&email=${encodeURIComponent(identityEmail)}`)
       if (response.ok) {
-        setIsConnected(true)
-        fetchGoogleEvents()
+        const data = await response.json()
+        setIsConnected(data.connected)
+        if (data.connected) {
+          fetchGoogleEvents()
+        }
       } else {
         setIsConnected(false)
       }
@@ -278,7 +281,32 @@ export default function SchedulePage() {
 
   // Connect to Google Calendar
   const handleConnectGoogle = () => {
-    window.location.href = '/api/auth/google'
+    if (!identityEmail) {
+      error('Silakan login terlebih dahulu')
+      return
+    }
+    window.location.href = `/api/auth/google?email=${encodeURIComponent(identityEmail)}`
+  }
+
+  // Disconnect Google Calendar
+  const handleDisconnectGoogle = async () => {
+    try {
+      if (!identityEmail) {
+        error('Silakan login terlebih dahulu')
+        return
+      }
+      const response = await fetch(`/api/auth/google/disconnect?email=${encodeURIComponent(identityEmail)}`)
+      if (response.ok) {
+        setIsConnected(false)
+        setGoogleEvents([])
+        success('Berhasil memutuskan hubungan dengan Google Calendar')
+      } else {
+        error('Gagal memutuskan hubungan dengan Google Calendar')
+      }
+    } catch (error) {
+      console.error('Error disconnecting Google Calendar:', error)
+      error('Gagal memutuskan hubungan dengan Google Calendar')
+    }
   }
 
   // Format date untuk display
@@ -1505,6 +1533,13 @@ export default function SchedulePage() {
                       <span>Refresh</span>
                     </>
                   )}
+                </button>
+                <button
+                  onClick={handleDisconnectGoogle}
+                  className="flex items-center space-x-2 px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-100 rounded-xl transition-all font-poppins font-semibold border border-red-400/30"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Putuskan Hubungan</span>
                 </button>
               </>
             ) : (
