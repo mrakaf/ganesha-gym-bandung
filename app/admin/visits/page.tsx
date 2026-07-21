@@ -194,7 +194,7 @@ export default function VisitsPage() {
   }
   
   const saveEdit = async () => {
-    if (!editingVisit) return
+    if (!editingVisit || submitting) return
     setSubmitting(true)
     try {
       // Combine date and time
@@ -244,7 +244,7 @@ export default function VisitsPage() {
   }
   
   const executeDelete = async () => {
-    if (!deletingVisit) return
+    if (!deletingVisit || submitting) return
     setSubmitting(true)
     try {
       const response = await fetch(`/api/admin/visits/${deletingVisit.id}`, {
@@ -271,6 +271,7 @@ export default function VisitsPage() {
   // Create function
   const handleCreateVisit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     if (!createName.trim()) {
       showError('Nama pengunjung wajib diisi')
       return
