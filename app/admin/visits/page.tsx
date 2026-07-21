@@ -67,6 +67,7 @@ export default function VisitsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createName, setCreateName] = useState('')
   const [createEmail, setCreateEmail] = useState('')
+  const [createVisitDate, setCreateVisitDate] = useState(getTodayDate())
   const [createNotes, setCreateNotes] = useState('')
 
   // Submitting state
@@ -271,21 +272,28 @@ export default function VisitsPage() {
       showError('Nama pengunjung wajib diisi')
       return
     }
+    if (!createEmail.trim()) {
+      showError('Email pengunjung wajib diisi')
+      return
+    }
     
     setSubmitting(true)
     try {
       const now = new Date()
+      // Combine visitDate (from form) with current time
+      const [year, month, day] = createVisitDate.split('-').map(Number)
+      const visitDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes())
       
       const response = await fetch('/api/admin/visits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: createName,
-          email: createEmail || null,
+          email: createEmail,
           amount: 25000,
           paymentMethod: 'cash',
           paidAt: now.toISOString(),
-          visitDate: now.toISOString(),
+          visitDate: visitDate.toISOString(),
           notes: createNotes,
         }),
       })
@@ -295,6 +303,7 @@ export default function VisitsPage() {
         setShowCreateModal(false)
         setCreateName('')
         setCreateEmail('')
+        setCreateVisitDate(getTodayDate())
         setCreateNotes('')
         fetchVisits()
       } else {
@@ -683,6 +692,7 @@ export default function VisitsPage() {
                   setShowCreateModal(false)
                   setCreateName('')
                   setCreateEmail('')
+                  setCreateVisitDate(getTodayDate())
                   setCreateNotes('')
                 }}
                 className="text-white/80 hover:text-white transition-colors"
@@ -694,7 +704,7 @@ export default function VisitsPage() {
             <form onSubmit={handleCreateVisit} className="p-5 space-y-3">
               <div>
                 <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                  Nama Pengunjung
+                  Nama Pengunjung <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -702,17 +712,30 @@ export default function VisitsPage() {
                   onChange={(e) => setCreateName(e.target.value)}
                   placeholder="Masukkan nama"
                   className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
-                  Email (Opsional)
+                  Email Pengunjung <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   value={createEmail}
                   onChange={(e) => setCreateEmail(e.target.value)}
                   placeholder="email@example.com"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">
+                  Tanggal Kunjungan
+                </label>
+                <input
+                  type="date"
+                  value={createVisitDate}
+                  onChange={(e) => setCreateVisitDate(e.target.value)}
                   className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-poppins text-gray-900 bg-white text-sm"
                 />
               </div>
@@ -735,6 +758,7 @@ export default function VisitsPage() {
                     setShowCreateModal(false)
                     setCreateName('')
                     setCreateEmail('')
+                    setCreateVisitDate(getTodayDate())
                     setCreateNotes('')
                   }}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-poppins text-sm font-medium"
