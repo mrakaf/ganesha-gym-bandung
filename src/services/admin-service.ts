@@ -432,13 +432,16 @@ export class AdminService {
     }
     if (query.startDate || query.endDate) {
       where.createdAt = {}
+      const utcOffset = 7 * 60 * 60 * 1000 // WIB is UTC+7
       if (query.startDate) {
         const [year, month, day] = query.startDate.split('-').map(Number)
-        where.createdAt.gte = startOfDay(new Date(year, month - 1, day))
+        const startLocal = startOfDay(new Date(year, month - 1, day))
+        where.createdAt.gte = new Date(startLocal.getTime() - utcOffset)
       }
       if (query.endDate) {
         const [year, month, day] = query.endDate.split('-').map(Number)
-        where.createdAt.lte = endOfDay(new Date(year, month - 1, day))
+        const endLocal = endOfDay(new Date(year, month - 1, day))
+        where.createdAt.lte = new Date(endLocal.getTime() - utcOffset)
       }
     }
     const [payments, total] = await Promise.all([this.repo.findPayments(where, skip, limit), this.repo.countPayments(where)])
@@ -887,13 +890,16 @@ export class AdminService {
     if (query.name) where.visitorName = { contains: query.name, mode: 'insensitive' }
     if (query.startDate || query.endDate) { 
       where.visitDate = {}; 
+      const utcOffset = 7 * 60 * 60 * 1000 // WIB is UTC+7
       if (query.startDate) {
         const [year, month, day] = query.startDate.split('-').map(Number)
-        where.visitDate.gte = startOfDay(new Date(year, month - 1, day))
+        const startLocal = startOfDay(new Date(year, month - 1, day))
+        where.visitDate.gte = new Date(startLocal.getTime() - utcOffset)
       }
       if (query.endDate) {
         const [year, month, day] = query.endDate.split('-').map(Number)
-        where.visitDate.lte = endOfDay(new Date(year, month - 1, day))
+        const endLocal = endOfDay(new Date(year, month - 1, day))
+        where.visitDate.lte = new Date(endLocal.getTime() - utcOffset)
       }
     }
     const [visits, total] = await Promise.all([this.repo.findVisits(where, skip, limit), this.repo.countVisitsByWhere(where)])
