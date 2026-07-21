@@ -12,9 +12,10 @@ export async function applyBenefitsForPaidPayment(
     type: PaymentType
     orderId: string | null
     paymentMethod?: string | null
+    existingVisitId?: string | null
   }
 ): Promise<void> {
-  const { memberId, type, orderId, paymentMethod } = params
+  const { memberId, type, orderId, paymentMethod, existingVisitId } = params
   if (!memberId) return
 
   const ref = orderId || 'unknown'
@@ -30,14 +31,34 @@ export async function applyBenefitsForPaidPayment(
     const now = new Date()
     const accessEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
-    const visit = await tx.visit.create({
-      data: {
-        memberId,
-        checkInStatus: isCashPayment ? 'CHECKED_IN' : 'PENDING',
-        notes: `Visit berbayar (${ref})${isCashPayment ? ' | Check-in via Cash Confirmation' : ''}`,
-        visitDate: now,
-      },
-    })
+    if (existingVisitId) {
+      // If we already have a visit, update it
+      const existingVisit = await tx.visit.findUnique({
+        where: { id: existingVisitId },
+        select: { notes: true }
+      })
+      const visitNotes = existingVisit?.notes
+      const newNotesPart = `Visit berbayar (${ref})${isCashPayment ? ' | Check-in via Cash Confirmation' : ''}`
+      const finalNotes = visitNotes ? `${visitNotes} | ${newNotesPart}` : newNotesPart
+      
+      await tx.visit.update({
+        where: { id: existingVisitId },
+        data: {
+          checkInStatus: isCashPayment ? 'CHECKED_IN' : 'PENDING',
+          notes: finalNotes,
+        },
+      })
+    } else {
+      // Otherwise, create a new visit
+      await tx.visit.create({
+        data: {
+          memberId,
+          checkInStatus: isCashPayment ? 'CHECKED_IN' : 'PENDING',
+          notes: `Visit berbayar (${ref})${isCashPayment ? ' | Check-in via Cash Confirmation' : ''}`,
+          visitDate: now,
+        },
+      })
+    }
 
     await tx.member.update({
       where: { id: memberId },

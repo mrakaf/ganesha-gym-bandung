@@ -952,7 +952,7 @@ export class AdminService {
 
       // Terapkan benefits jika ada
       if (memberId) {
-        await applyBenefitsForPaidPayment(tx, { memberId, type: 'VISIT', orderId: null, paymentMethod })
+        await applyBenefitsForPaidPayment(tx, { memberId, type: 'VISIT', orderId: null, paymentMethod, existingVisitId: visit.id })
       }
 
       return { visit, payment }
