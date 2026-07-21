@@ -902,12 +902,63 @@ export class AdminService {
   async createVisit(input: any) {
     if (!input?.name) throw new AppError('Nama pengunjung wajib diisi', 400)
     const visitDate = input.visitDate ? new Date(input.visitDate) : new Date()
-    return this.repo.createVisit({ 
-      visitorName: String(input.name), 
-      visitDate, 
-      createdAt: visitDate, // Sinkronisasi createdAt dengan visitDate
-      notes: input.notes || null 
+    const amount = input.amount ? Number(input.amount) : 25000
+    const paymentMethod = input.paymentMethod ? String(input.paymentMethod).toLowerCase() : 'cash'
+    const paidAt = input.paidAt ? new Date(input.paidAt) : new Date()
+    const email = input.email ? String(input.email).toLowerCase() : null
+
+    // Cari member berdasarkan email jika ada
+    let memberId = null
+    if (email) {
+      const existingMember = await prisma.member.findUnique({ where: { email } })
+      if (existingMember) {
+        memberId = existingMember.id
+      } else {
+        // Buat member baru jika tidak ditemukan
+        const newMember = await prisma.member.create({
+          data: {
+            name: String(input.name),
+            email,
+            isActive: true,
+          },
+        })
+        memberId = newMember.id
+      }
+    }
+
+    // Gunakan transaksi untuk membuat visit dan payment
+    const result = await prisma.$transaction(async (tx) => {
+      const visit = await tx.visit.create({
+        data: {
+          visitorName: String(input.name),
+          memberId,
+          visitDate,
+          createdAt: visitDate,
+          notes: input.notes || null,
+        },
+      })
+
+      const payment = await tx.payment.create({
+        data: {
+          memberId,
+          type: 'VISIT',
+          amount,
+          status: 'PAID',
+          paymentMethod,
+          paidAt,
+          description: `Pembayaran kunjungan ${String(input.name)}`,
+        },
+      })
+
+      // Terapkan benefits jika ada
+      if (memberId) {
+        await applyBenefitsForPaidPayment(tx, { memberId, type: 'VISIT', paymentMethod })
+      }
+
+      return { visit, payment }
     })
+
+    return result.visit
   }
   async updateVisit(id: string, input: any) {
     if (!id) throw new AppError('Visit ID is required', 400)

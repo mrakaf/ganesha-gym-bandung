@@ -66,6 +66,10 @@ export default function VisitsPage() {
   // Create state
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createName, setCreateName] = useState('')
+  const [createEmail, setCreateEmail] = useState('')
+  const [createAmount, setCreateAmount] = useState('25000')
+  const [createPaymentMethod, setCreatePaymentMethod] = useState('cash')
+  const [createPaidAt, setCreatePaidAt] = useState(getTodayDate())
   const [createVisitDate, setCreateVisitDate] = useState(getTodayDate())
   const [createVisitTime, setCreateVisitTime] = useState('')
   const [createNotes, setCreateNotes] = useState('')
@@ -270,7 +274,7 @@ export default function VisitsPage() {
     
     setSubmitting(true)
     try {
-      // Combine date and time
+      // Combine date and time for visitDate
       const [year, month, day] = createVisitDate.split('-').map(Number)
       let hours, minutes
       if (createVisitTime) {
@@ -287,6 +291,10 @@ export default function VisitsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: createName,
+          email: createEmail || null,
+          amount: createAmount,
+          paymentMethod: createPaymentMethod,
+          paidAt: createPaidAt,
           visitDate: combinedDate.toISOString(),
           notes: createNotes,
         }),
@@ -296,6 +304,10 @@ export default function VisitsPage() {
         success('Kunjungan berhasil dicatat')
         setShowCreateModal(false)
         setCreateName('')
+        setCreateEmail('')
+        setCreateAmount('25000')
+        setCreatePaymentMethod('cash')
+        setCreatePaidAt(new Date().toISOString().split('T')[0])
         setCreateVisitDate(new Date().toISOString().split('T')[0])
         setCreateVisitTime('')
         setCreateNotes('')
@@ -670,58 +682,110 @@ export default function VisitsPage() {
             </div>
 
             <form onSubmit={handleCreateVisit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Nama Pengunjung
-                </label>
-                <input
-                  type="text"
-                  value={createName}
-                  onChange={(e) => setCreateName(e.target.value)}
-                  placeholder="Masukkan nama pengunjung"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Tanggal Kunjungan
-                </label>
-                <input
-                  type="date"
-                  value={createVisitDate}
-                  onChange={(e) => setCreateVisitDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Waktu Kunjungan
-                </label>
-                <input
-                  type="time"
-                  value={createVisitTime}
-                  onChange={(e) => setCreateVisitTime(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
-                  Catatan
-                </label>
-                <textarea
-                  value={createNotes}
-                  onChange={(e) => setCreateNotes(e.target.value)}
-                  placeholder="Masukkan catatan tambahan..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
-                  rows={3}
-                />
-              </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Nama Pengunjung
+        </label>
+        <input
+          type="text"
+          value={createName}
+          onChange={(e) => setCreateName(e.target.value)}
+          placeholder="Masukkan nama pengunjung"
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Email Pengunjung (Opsional)
+        </label>
+        <input
+          type="email"
+          value={createEmail}
+          onChange={(e) => setCreateEmail(e.target.value)}
+          placeholder="Masukkan email pengunjung"
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Jumlah Pembayaran
+        </label>
+        <input
+          type="number"
+          value={createAmount}
+          onChange={(e) => setCreateAmount(e.target.value)}
+          placeholder="Masukkan jumlah pembayaran"
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Metode Pembayaran
+        </label>
+        <select
+          value={createPaymentMethod}
+          onChange={(e) => setCreatePaymentMethod(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        >
+          <option value="cash">Tunai (Cash)</option>
+          <option value="qris">QRIS</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Tanggal Pembayaran
+        </label>
+        <input
+          type="date"
+          value={createPaidAt}
+          onChange={(e) => setCreatePaidAt(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Tanggal Kunjungan
+        </label>
+        <input
+          type="date"
+          value={createVisitDate}
+          onChange={(e) => setCreateVisitDate(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Waktu Kunjungan
+        </label>
+        <input
+          type="time"
+          value={createVisitTime}
+          onChange={(e) => setCreateVisitTime(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-poppins font-medium text-gray-700 mb-2">
+          Catatan
+        </label>
+        <textarea
+          value={createNotes}
+          onChange={(e) => setCreateNotes(e.target.value)}
+          placeholder="Masukkan catatan tambahan..."
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-poppins text-gray-900 bg-white"
+          rows={3}
+        />
+      </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
                     setCreateName('')
+                    setCreateEmail('')
+                    setCreateAmount('25000')
+                    setCreatePaymentMethod('cash')
+                    setCreatePaidAt(new Date().toISOString().split('T')[0])
                     setCreateVisitDate(new Date().toISOString().split('T')[0])
                     setCreateVisitTime('')
                     setCreateNotes('')
