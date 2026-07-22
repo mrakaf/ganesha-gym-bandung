@@ -887,7 +887,12 @@ export class AdminService {
   }
   async listVisits(query: any) {
     const page = parseInt(String(query.page || '1')); const limit = parseInt(String(query.limit || '20')); const skip = (page - 1) * limit; const where: any = {}
-    if (query.name) where.visitorName = { contains: query.name, mode: 'insensitive' }
+    if (query.name) {
+      where.OR = [
+        { visitorName: { contains: query.name, mode: 'insensitive' } },
+        { member: { name: { contains: query.name, mode: 'insensitive' } } },
+      ];
+    }
     if (query.startDate || query.endDate) { 
       where.visitDate = {}; 
       const utcOffset = 7 * 60 * 60 * 1000 // WIB is UTC+7
