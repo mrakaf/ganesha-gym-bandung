@@ -50,16 +50,25 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'expired', label: 'Kedaluwarsa' },
 ]
 
+const RETENTION_FILTER_OPTIONS: { value: string; label: string; status: 'all' | 'AMAN' | 'PERLU_DIPERHATIKAN' | 'RISIKO_TINGGI' }[] = [
+  { value: 'all', label: 'Semua Retensi', status: 'all' },
+  { value: 'AMAN', label: 'Aman', status: 'AMAN' },
+  { value: 'PERLU_DIPERHATIKAN', label: 'Perlu Diperhatikan', status: 'PERLU_DIPERHATIKAN' },
+  { value: 'RISIKO_TINGGI', label: 'Risiko Tinggi', status: 'RISIKO_TINGGI' },
+]
+
 export default function MembersPage() {
   const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [retentionFilter, setRetentionFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'nameAsc' | 'nameDesc' | 'endSoonest' | 'endLatest'>('nameAsc')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [exporting, setExporting] = useState(false)
   const { success, error: showError } = useToast()
   
   // Modal states
@@ -103,6 +112,26 @@ export default function MembersPage() {
       console.error('Error fetching members:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAllMembers = async (): Promise<Member[]> => {
+    try {
+      const params = new URLSearchParams({
+        search,
+        filter,
+        page: '1',
+        limit: '10000',
+      })
+      const response = await fetch(`/api/admin/members?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        return data.members || []
+      }
+      return []
+    } catch (error) {
+      console.error('Error fetching all members:', error)
+      return []
     }
   }
 
@@ -245,21 +274,42 @@ export default function MembersPage() {
 
 
 
-  const buildExportConfig = (): ExportConfig => {
-    const rows = sortedMembers.map((m) => ({
+  const filteredMembers = useMemo(() => {
+    if (retentionFilter === 'all') return members
+    return members.filter(m => m.retentionStatus === retentionFilter)
+  }, [members, retentionFilter])
+
+  const buildExportConfig = (data: Member[] = filteredMembers, retentionStatus: string = retentionFilter): ExportConfig => {
+    const filterByRetention = (list: Member[]) => {
+      if (retentionStatus === 'all') return list
+      return list.filter(m => m.retentionStatus === retentionStatus)
+    }
+    const exportData = filterByRetention(data).sort((a, b) => {
+      if (sortBy === 'nameAsc') return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
+      if (sortBy === 'nameDesc') return b.name.localeCompare(a.name, 'id', { sensitivity: 'base' })
+      const aTs = a.membershipEnd ? new Date(a.membershipEnd).getTime() : Number.POSITIVE_INFINITY
+      const bTs = b.membershipEnd ? new Date(b.membershipEnd).getTime() : Number.POSITIVE_INFINITY
+      if (sortBy === 'endSoonest') return aTs - bTs
+      return bTs - aTs
+    })
+    const rows = exportData.map((m) => ({
       name: m.name,
       email: m.email || '-',
       phone: m.phone || '-',
       memberCardId: formatMemberCardDisplay(m.memberCardId) || '-',
       status: m.isActive ? 'Aktif' : 'Nonaktif',
+      retention: getRetentionStatusLabel(m.retentionStatus).label,
       membershipStart: m.membershipStart ? format(new Date(m.membershipStart), 'dd/MM/yyyy') : '-',
       membershipEnd: m.membershipEnd ? format(new Date(m.membershipEnd), 'dd/MM/yyyy') : '-',
       visits: String(m.visitCount),
       payments: String(m.paymentCount),
     }))
+    const subtitles: string[] = []
+    if (filter !== 'all') subtitles.push(`Filter: ${FILTER_OPTIONS.find((o) => o.value === filter)?.label || filter}`)
+    if (retentionStatus !== 'all') subtitles.push(`Retensi: ${RETENTION_FILTER_OPTIONS.find((o) => o.value === retentionStatus)?.label || retentionStatus}`)
     return {
       title: 'Laporan Data Member',
-      subtitle: filter !== 'all' ? `Filter: ${FILTER_OPTIONS.find((o) => o.value === filter)?.label || filter}` : undefined,
+      subtitle: subtitles.length > 0 ? subtitles.join(' · ') : undefined,
       filename: 'members-report',
       columns: [
         { header: 'Nama', key: 'name', width: 45 },
@@ -267,6 +317,7 @@ export default function MembersPage() {
         { header: 'Telepon', key: 'phone', width: 30 },
         { header: 'Kartu', key: 'memberCardId', width: 25 },
         { header: 'Status', key: 'status', width: 20 },
+        { header: 'Retensi', key: 'retention', width: 28 },
         { header: 'Mulai', key: 'membershipStart', width: 25 },
         { header: 'Berakhir', key: 'membershipEnd', width: 25 },
         { header: 'Kunj.', key: 'visits', width: 15 },
@@ -276,8 +327,8 @@ export default function MembersPage() {
     }
   }
 
-  const activeOnPage = members.filter((member) => member.isActive).length
-  const expiredOnPage = members.filter(
+  const activeOnPage = filteredMembers.filter((member) => member.isActive).length
+  const expiredOnPage = filteredMembers.filter(
     (member) => member.membershipEnd && new Date(member.membershipEnd) < new Date()
   ).length
 
@@ -285,7 +336,7 @@ export default function MembersPage() {
     Boolean(member.membershipEnd && new Date(member.membershipEnd) < new Date())
 
   const sortedMembers = useMemo(() => {
-    const data = [...members]
+    const data = [...filteredMembers]
     data.sort((a, b) => {
       if (sortBy === 'nameAsc') {
         return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
@@ -302,7 +353,40 @@ export default function MembersPage() {
       return bTs - aTs
     })
     return data
-  }, [members, sortBy])
+  }, [filteredMembers, sortBy])
+
+  const handleExportPDF = async () => {
+    if (exporting) return
+    try {
+      setExporting(true)
+      const allData = await fetchAllMembers()
+      exportPDF(buildExportConfig(allData, retentionFilter))
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    if (exporting) return
+    try {
+      setExporting(true)
+      const allData = await fetchAllMembers()
+      exportExcel(buildExportConfig(allData, retentionFilter))
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handlePrint = async () => {
+    if (exporting) return
+    try {
+      setExporting(true)
+      const allData = await fetchAllMembers()
+      printData(buildExportConfig(allData, retentionFilter))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-fade-in rounded-3xl border border-sky-100/80 bg-gradient-to-br from-sky-50 via-white to-indigo-50/40 p-3 sm:p-4 md:p-5">
@@ -318,9 +402,9 @@ export default function MembersPage() {
             </div>
             <div className="flex items-center gap-2">
               <ExportDropdown
-                onExportPDF={() => exportPDF(buildExportConfig())}
-                onExportExcel={() => exportExcel(buildExportConfig())}
-                onPrint={() => printData(buildExportConfig())}
+                onExportPDF={handleExportPDF}
+                onExportExcel={handleExportExcel}
+                onPrint={handlePrint}
               />
               <button
                 onClick={openCreateModal}
@@ -368,11 +452,11 @@ export default function MembersPage() {
                 />
               </div>
 
-              <div className="flex flex-col lg:flex-row gap-3 lg:items-end lg:justify-between">
+              <div className="flex flex-col gap-4">
                 <div>
                   <p className="text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                     <Filter className="w-3.5 h-3.5" aria-hidden />
-                    Filter cepat
+                    Filter Status
                   </p>
                   <div className="flex flex-wrap gap-2" role="group" aria-label="Filter status member">
                     {FILTER_OPTIONS.map((opt) => (
@@ -395,7 +479,47 @@ export default function MembersPage() {
                     ))}
                   </div>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white/90 px-3 py-2">
+
+                <div>
+                  <p className="text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                    Filter Retensi
+                  </p>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Filter retensi member">
+                    {RETENTION_FILTER_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        aria-pressed={retentionFilter === opt.value}
+                        onClick={() => {
+                          setRetentionFilter(opt.value)
+                          setPage(1)
+                        }}
+                        className={`rounded-full px-3.5 py-1.5 text-sm font-poppins font-medium transition-all ${
+                          retentionFilter === opt.value
+                            ? opt.value === 'all'
+                              ? 'bg-gray-900 text-white shadow-sm'
+                              : opt.value === 'AMAN'
+                                ? 'bg-green-600 text-white shadow-sm'
+                                : opt.value === 'PERLU_DIPERHATIKAN'
+                                  ? 'bg-yellow-600 text-white shadow-sm'
+                                  : 'bg-red-600 text-white shadow-sm'
+                            : opt.value === 'all'
+                              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              : opt.value === 'AMAN'
+                                ? 'bg-green-50 text-green-800 hover:bg-green-100 border border-green-200'
+                                : opt.value === 'PERLU_DIPERHATIKAN'
+                                  ? 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100 border border-yellow-200'
+                                  : 'bg-red-50 text-red-800 hover:bg-red-100 border border-red-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white/90 px-3 py-2 w-full lg:w-auto">
                   <p className="text-[11px] uppercase tracking-wide text-gray-500 font-poppins mb-1">Urutkan</p>
                   <div className="flex items-center gap-2">
                     <select
@@ -403,7 +527,7 @@ export default function MembersPage() {
                       onChange={(e) =>
                         setSortBy(e.target.value as 'nameAsc' | 'nameDesc' | 'endSoonest' | 'endLatest')
                       }
-                      className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg bg-white font-poppins text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg bg-white font-poppins text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent w-full"
                     >
                       <option value="nameAsc">Nama (A-Z)</option>
                       <option value="nameDesc">Nama (Z-A)</option>
@@ -424,7 +548,7 @@ export default function MembersPage() {
                   <p className="text-gray-600 font-poppins">Memuat data...</p>
                 </div>
               </div>
-            ) : members.length === 0 ? (
+            ) : filteredMembers.length === 0 ? (
               <div className="flex items-center justify-center py-14 px-4">
                 <div className="text-center max-w-sm">
                   <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -439,7 +563,7 @@ export default function MembersPage() {
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                   <p className="text-sm font-poppins text-gray-600">
                     Menampilkan{' '}
-                    <span className="font-semibold text-gray-900">{members.length}</span> member di halaman ini
+                    <span className="font-semibold text-gray-900">{filteredMembers.length}</span> member di halaman ini
                     {total > 0 && (
                       <>
                         {' '}
