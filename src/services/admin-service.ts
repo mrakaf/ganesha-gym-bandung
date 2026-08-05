@@ -175,9 +175,23 @@ export class AdminService {
       where.membershipEnd = { lt: new Date() }
       where.isActive = true
     }
-    const [members, total] = await Promise.all([
+    const whereActive = { ...where, isActive: true }
+    const whereExpired = {
+      ...where,
+      isActive: true,
+      membershipEnd: { lt: new Date() },
+    }
+    // Remove duplicate membershipEnd filter in case original filter already has it
+    if (filter === 'expired' || filter === 'overdue') {
+      delete whereExpired.membershipEnd
+      delete whereExpired.isActive
+      Object.assign(whereExpired, where)
+    }
+    const [members, total, totalActive, totalExpired] = await Promise.all([
       this.repo.findMembers(where, skip, limit),
       this.repo.countMembers(where),
+      this.repo.countMembers(whereActive),
+      this.repo.countMembers(whereExpired),
     ])
     // Calculate retention status for each member
     const membersWithRetention = members.map((member) => {
@@ -225,6 +239,7 @@ export class AdminService {
     return {
       members: membersWithRetention,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      stats: { totalActive, totalExpired },
     }
   }
 

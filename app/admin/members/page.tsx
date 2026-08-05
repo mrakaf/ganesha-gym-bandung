@@ -68,6 +68,8 @@ export default function MembersPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [totalActive, setTotalActive] = useState(0)
+  const [totalExpired, setTotalExpired] = useState(0)
   const [exporting, setExporting] = useState(false)
   const { success, error: showError } = useToast()
   
@@ -107,6 +109,10 @@ export default function MembersPage() {
         setMembers(data.members)
         setTotalPages(data.pagination.totalPages)
         setTotal(data.pagination.total)
+        if (data.stats) {
+          setTotalActive(data.stats.totalActive || 0)
+          setTotalExpired(data.stats.totalExpired || 0)
+        }
       }
     } catch (error) {
       console.error('Error fetching members:', error)
@@ -327,11 +333,6 @@ export default function MembersPage() {
     }
   }
 
-  const activeOnPage = filteredMembers.filter((member) => member.isActive).length
-  const expiredOnPage = filteredMembers.filter(
-    (member) => member.membershipEnd && new Date(member.membershipEnd) < new Date()
-  ).length
-
   const membershipExpired = (member: Member) =>
     Boolean(member.membershipEnd && new Date(member.membershipEnd) < new Date())
 
@@ -423,11 +424,11 @@ export default function MembersPage() {
             </div>
             <div className="rounded-xl border border-emerald-300/35 bg-emerald-400/10 backdrop-blur-sm px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-emerald-100 font-poppins">Aktif</p>
-              <p className="mt-1 text-2xl font-oswald font-bold text-white">{activeOnPage}</p>
+              <p className="mt-1 text-2xl font-oswald font-bold text-white">{totalActive}</p>
             </div>
             <div className="rounded-xl border border-amber-300/35 bg-amber-400/10 backdrop-blur-sm px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-amber-100 font-poppins">Expired</p>
-              <p className="mt-1 text-2xl font-oswald font-bold text-white">{expiredOnPage}</p>
+              <p className="mt-1 text-2xl font-oswald font-bold text-white">{totalExpired}</p>
             </div>
           </div>
         </div>
