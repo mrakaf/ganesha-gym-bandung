@@ -93,7 +93,7 @@ function buildReminderContent(type: string, memberName: string) {
           paragraphs: [
             'Masa aktif membership Anda telah berakhir. Untuk menjaga akses fitur premium tetap aktif, silakan lakukan perpanjangan membership.',
             'Biaya perpanjangan membership adalah <strong>Rp160.000</strong>.',
-            '<strong>Catatan:</strong> Jika tidak dilakukan perpanjangan lebih dari 7 hari, akun akan dinonaktifkan dan aktivasi kembali mengikuti paket Member Baru sebesar Rp200.000.',
+            '<strong>Catatan:</strong> Jika tidak dilakukan perpanjangan lebih dari 14 hari, akun akan dinonaktifkan dan aktivasi kembali mengikuti paket Member Baru sebesar Rp200.000.',
           ],
           ctaText: paymentUrl ? 'Perpanjang Membership Sekarang' : undefined,
           ctaUrl: paymentUrl,
@@ -101,13 +101,13 @@ function buildReminderContent(type: string, memberName: string) {
       }
     case 'OVERDUE_H7':
       return {
-        subject: 'Pemberitahuan: Akun Dinonaktifkan (Membership Lewat 7 Hari)',
+        subject: 'Pemberitahuan: Akun Dinonaktifkan (Membership Lewat 14 Hari)',
         html: buildBrandedEmailLayout({
           title: 'Akun Dinonaktifkan Otomatis',
           greetingName: memberName,
           accent: 'red',
           paragraphs: [
-            'Membership Anda telah melewati masa tenggang lebih dari 7 hari, sehingga akun dinonaktifkan otomatis sesuai kebijakan sistem.',
+            'Membership Anda telah melewati masa tenggang lebih dari 14 hari, sehingga akun dinonaktifkan otomatis sesuai kebijakan sistem.',
             'Untuk mengaktifkan kembali akun, silakan melakukan registrasi ulang paket Member Baru sebesar <strong>Rp200.000</strong>.',
           ],
           ctaText: paymentUrl ? 'Aktifkan Kembali Akun' : undefined,
@@ -221,12 +221,12 @@ export async function runMembershipReminderJob(
         continue
       }
 
-      const isOverdueMoreThan7Days =
+      const isOverdueMoreThan14Days =
         type === 'EXPIRED' &&
         !!member.membershipEnd &&
-        member.membershipEnd < subDays(now, 7)
+        member.membershipEnd < subDays(now, 14)
 
-      if (isOverdueMoreThan7Days) {
+      if (isOverdueMoreThan14Days) {
         await prisma.member.update({
           where: { id: member.id },
           data: {
@@ -244,12 +244,12 @@ export async function runMembershipReminderJob(
         await addAdminNotification({
           type: 'warning',
           title: 'Member Dinonaktifkan',
-          message: `${member.name} telah dinonaktifkan karena membership expired lebih dari 7 hari.`,
+          message: `${member.name} telah dinonaktifkan karena membership expired lebih dari 14 hari.`,
           link: `/admin/members/${member.id}`,
         })
       }
 
-      const emailType = isOverdueMoreThan7Days ? 'OVERDUE_H7' : 'EXPIRED'
+      const emailType = isOverdueMoreThan14Days ? 'OVERDUE_H7' : 'EXPIRED'
       const content = buildReminderContent(emailType, member.name)
       const emailResult = member.email
         ? await sendEmail({

@@ -175,23 +175,32 @@ export class AdminService {
       where.membershipEnd = { lt: new Date() }
       where.isActive = true
     }
+    
+    // Safety check: auto-deactivate members who are >14 days overdue
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    await prisma.member.updateMany({
+      where: {
+        isActive: true,
+        membershipEnd: { lt: fourteenDaysAgo },
+      },
+      data: {
+        isActive: false,
+        mustPayRegistrationFee: true,
+        membershipStart: null,
+        membershipEnd: null,
+        accessType: null,
+        accessStart: null,
+        accessEnd: null,
+      },
+    })
+
     const whereActive = { ...where, isActive: true }
-    const whereExpired = {
-      ...where,
-      isActive: true,
-      membershipEnd: { lt: new Date() },
-    }
-    // Remove duplicate membershipEnd filter in case original filter already has it
-    if (filter === 'expired' || filter === 'overdue') {
-      delete whereExpired.membershipEnd
-      delete whereExpired.isActive
-      Object.assign(whereExpired, where)
-    }
-    const [members, total, totalActive, totalExpired] = await Promise.all([
+    const whereInactive = { ...where, isActive: false }
+    const [members, total, totalActive, totalInactive] = await Promise.all([
       this.repo.findMembers(where, skip, limit),
       this.repo.countMembers(where),
       this.repo.countMembers(whereActive),
-      this.repo.countMembers(whereExpired),
+      this.repo.countMembers(whereInactive),
     ])
     // Calculate retention status for each member
     const membersWithRetention = members.map((member) => {
@@ -239,7 +248,7 @@ export class AdminService {
     return {
       members: membersWithRetention,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      stats: { totalActive, totalExpired },
+      stats: { totalActive, totalInactive },
     }
   }
 
@@ -438,6 +447,9 @@ export class AdminService {
         { member: { name: { contains: query.search, mode: 'insensitive' } } },
         { member: { email: { contains: query.search, mode: 'insensitive' } } },
         { orderId: { contains: query.search, mode: 'insensitive' } },
+        { visitorName: { contains: query.search, mode: 'insensitive' } },
+        { visitorEmail: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
       ]
     }
     if (query.type) where.type = query.type === 'MEMBER' ? { in: ['MEMBERSHIP_NEW', 'MEMBERSHIP_RENEWAL'] } : query.type
@@ -474,6 +486,9 @@ export class AdminService {
         paidAt: payment.paidAt,
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
+        visitorName: (payment as any).visitorName ?? null,
+        visitorEmail: (payment as any).visitorEmail ?? null,
+        visitorPhone: (payment as any).visitorPhone ?? null,
       })),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     }
@@ -507,6 +522,24 @@ export class AdminService {
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const dayOfMonth = now.getDate()
+    
+    // Safety check: auto-deactivate members who are >14 days overdue
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    await prisma.member.updateMany({
+      where: {
+        isActive: true,
+        membershipEnd: { lt: fourteenDaysAgo },
+      },
+      data: {
+        isActive: false,
+        mustPayRegistrationFee: true,
+        membershipStart: null,
+        membershipEnd: null,
+        accessType: null,
+        accessStart: null,
+        accessEnd: null,
+      },
+    })
     
     const [totalMembers, activeMembers, totalVisits, visitsThisMonth, totalPayments, paymentsThisMonth, pendingPayments, expiredMembers] = await Promise.all([
       this.repo.countMembers({ payments: { some: { type: { in: ['MEMBERSHIP_NEW', 'MEMBERSHIP_RENEWAL'] } } } }),
@@ -870,7 +903,7 @@ export class AdminService {
         priority: 'medium',
         type: 'expired_members',
         title: `${expiredMembers.length} Member Sudah Kedaluwarsa!`,
-        description: 'Tindak lanjuti member berikut: hapus atau tawarkan perpanjangan membership.',
+        description: 'Tindak lanjuti member berikut: tawarkan perpanjangan membership. Member yang >14 hari expired akan otomatis dinonaktifkan.',
         items: expiredMembers.map(m => m.name),
         link: '/admin/members?filter=expired',
       })
@@ -905,7 +938,9 @@ export class AdminService {
     if (query.name) {
       where.OR = [
         { visitorName: { contains: query.name, mode: 'insensitive' } },
+        { visitorEmail: { contains: query.name, mode: 'insensitive' } },
         { member: { name: { contains: query.name, mode: 'insensitive' } } },
+        { member: { email: { contains: query.name, mode: 'insensitive' } } },
       ];
     }
     if (query.startDate || query.endDate) { 
@@ -922,7 +957,19 @@ export class AdminService {
         where.visitDate.lte = new Date(endLocal.getTime() - utcOffset)
       }
     }
-    const [visits, total] = await Promise.all([this.repo.findVisits(where, skip, limit), this.repo.countVisitsByWhere(where)])
+    const [rawVisits, total] = await Promise.all([this.repo.findVisits(where, skip, limit), this.repo.countVisitsByWhere(where)])
+    const visits = rawVisits.map((v: any) => ({
+      id: v.id,
+      memberId: v.memberId,
+      visitorName: v.visitorName ?? null,
+      visitorEmail: v.visitorEmail ?? null,
+      visitorPhone: v.visitorPhone ?? null,
+      visitDate: v.visitDate,
+      checkInStatus: v.checkInStatus,
+      notes: v.notes,
+      createdAt: v.createdAt,
+      member: v.member ?? null,
+    }))
     return { visits, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } }
   }
   async createVisit(input: any) {
@@ -931,38 +978,35 @@ export class AdminService {
     const amount = input.amount ? Number(input.amount) : 25000
     const paymentMethod = input.paymentMethod ? String(input.paymentMethod).toLowerCase() : 'cash'
     const paidAt = input.paidAt ? new Date(input.paidAt) : new Date()
-    const email = input.email ? String(input.email).toLowerCase() : null
+    const email = input.email ? String(input.email).toLowerCase().trim() : null
+    const visitorName = String(input.name)
+    const phone = input.phone ? String(input.phone) : null
 
-    // Cari member berdasarkan email jika ada
-    let memberId = null
+    let memberId: string | null = null
     if (email) {
       const existingMember = await prisma.member.findUnique({ where: { email } })
       if (existingMember) {
         memberId = existingMember.id
-      } else {
-        // Buat member baru jika tidak ditemukan
-        const newMember = await prisma.member.create({
-          data: {
-            name: String(input.name),
-            email,
-            isActive: true,
-          },
-        })
-        memberId = newMember.id
       }
     }
 
-    // Gunakan transaksi untuk membuat visit dan payment
     const result = await prisma.$transaction(async (tx) => {
       const visit = await tx.visit.create({
         data: {
-          visitorName: String(input.name),
+          visitorName: memberId ? null : visitorName,
+          visitorEmail: memberId ? null : email,
+          visitorPhone: memberId ? null : phone,
           memberId,
           visitDate,
           createdAt: visitDate,
           notes: input.notes || null,
+          checkInStatus: 'CHECKED_IN',
         },
       })
+
+      const paymentDescription = memberId
+        ? `Pembayaran kunjungan member ${visitorName} (${email || 'n/a'})`
+        : `Pembayaran kunjungan guest ${visitorName}${email ? ' (' + email + ')' : ''} [QRIS Guest Visit Rp25.000]`
 
       const payment = await tx.payment.create({
         data: {
@@ -972,11 +1016,13 @@ export class AdminService {
           status: 'PAID',
           paymentMethod,
           paidAt,
-          description: `Pembayaran kunjungan ${String(input.name)}`,
+          description: paymentDescription,
+          visitorName: memberId ? null : visitorName,
+          visitorEmail: memberId ? null : email,
+          visitorPhone: memberId ? null : phone,
         },
       })
 
-      // Terapkan benefits jika ada
       if (memberId) {
         await applyBenefitsForPaidPayment(tx, { memberId, type: 'VISIT', orderId: null, paymentMethod, existingVisitId: visit.id })
       }

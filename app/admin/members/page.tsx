@@ -12,7 +12,6 @@ import {
   UserX,
   AlertTriangle,
   Plus,
-  Trash2,
   X,
   CalendarDays,
   Mail,
@@ -47,7 +46,7 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'Semua' },
   { value: 'active', label: 'Aktif' },
   { value: 'inactive', label: 'Tidak aktif' },
-  { value: 'expired', label: 'Kedaluwarsa' },
+  { value: 'expired', label: 'Nonaktif' },
 ]
 
 const RETENTION_FILTER_OPTIONS: { value: string; label: string; status: 'all' | 'AMAN' | 'PERLU_DIPERHATIKAN' | 'RISIKO_TINGGI' }[] = [
@@ -69,15 +68,13 @@ export default function MembersPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [totalActive, setTotalActive] = useState(0)
-  const [totalExpired, setTotalExpired] = useState(0)
+  const [totalInactive, setTotalInactive] = useState(0)
   const [exporting, setExporting] = useState(false)
   const { success, error: showError } = useToast()
   
   // Modal states
   const [showModal, setShowModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingMember, setEditingMember] = useState<Member | null>(null)
-  const [deletingMember, setDeletingMember] = useState<Member | null>(null)
   const [saving, setSaving] = useState(false)
   
   // Form state
@@ -111,7 +108,7 @@ export default function MembersPage() {
         setTotal(data.pagination.total)
         if (data.stats) {
           setTotalActive(data.stats.totalActive || 0)
-          setTotalExpired(data.stats.totalExpired || 0)
+          setTotalInactive(data.stats.totalInactive || 0)
         }
       }
     } catch (error) {
@@ -245,40 +242,6 @@ export default function MembersPage() {
       setSaving(false)
     }
   }
-
-  const handleDelete = async () => {
-    if (!deletingMember) return
-
-    setSaving(true)
-    try {
-      const response = await fetch(`/api/admin/members/${deletingMember.id}`, {
-        method: 'DELETE',
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        success('Member berhasil dihapus')
-        setShowDeleteModal(false)
-        setDeletingMember(null)
-        fetchMembers()
-      } else {
-        showError(data.error || 'Gagal menghapus member')
-      }
-    } catch (error) {
-      console.error('Error deleting member:', error)
-      showError('Terjadi kesalahan saat menghapus member')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const openDeleteModal = (member: Member) => {
-    setDeletingMember(member)
-    setShowDeleteModal(true)
-  }
-
-
 
   const filteredMembers = useMemo(() => {
     if (retentionFilter === 'all') return members
@@ -426,9 +389,9 @@ export default function MembersPage() {
               <p className="text-xs uppercase tracking-wide text-emerald-100 font-poppins">Aktif</p>
               <p className="mt-1 text-2xl font-oswald font-bold text-white">{totalActive}</p>
             </div>
-            <div className="rounded-xl border border-amber-300/35 bg-amber-400/10 backdrop-blur-sm px-4 py-3">
-              <p className="text-xs uppercase tracking-wide text-amber-100 font-poppins">Expired</p>
-              <p className="mt-1 text-2xl font-oswald font-bold text-white">{totalExpired}</p>
+            <div className="rounded-xl border border-slate-400/40 bg-slate-500/20 backdrop-blur-sm px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-slate-100 font-poppins">Non Aktif</p>
+              <p className="mt-1 text-2xl font-oswald font-bold text-white">{totalInactive}</p>
             </div>
           </div>
         </div>
@@ -658,14 +621,6 @@ export default function MembersPage() {
                             <Edit className="w-4 h-4" />
                             Edit
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => openDeleteModal(member)}
-                            className="flex-1 inline-flex justify-center items-center gap-1.5 rounded-xl bg-red-50 py-2.5 text-red-800 font-poppins text-sm font-semibold hover:bg-red-100"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Hapus
-                          </button>
                         </div>
                       </li>
                     )
@@ -787,15 +742,6 @@ export default function MembersPage() {
                                 >
                                   <Edit className="w-4 h-4 shrink-0" />
                                   Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => openDeleteModal(member)}
-                                  className="inline-flex w-full justify-center items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-2 text-red-800 hover:bg-red-100 font-poppins text-sm font-semibold transition-colors"
-                                  title="Hapus member"
-                                >
-                                  <Trash2 className="w-4 h-4 shrink-0" />
-                                  Hapus
                                 </button>
                               </div>
                             </td>
@@ -988,41 +934,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && deletingMember && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-oswald font-bold text-gray-900 mb-3">Hapus Member?</h3>
-              <p className="text-gray-600 mb-6 font-poppins">
-                Apakah Anda yakin ingin menghapus member <strong>{deletingMember.name}</strong>? 
-                Tindakan ini tidak dapat dibatalkan.
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false)
-                    setDeletingMember(null)
-                  }}
-                  className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors font-poppins text-sm font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={saving}
-                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-all font-poppins text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50"
-                >
-                  {saving ? 'Menghapus...' : 'Ya, Hapus'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -14,6 +14,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return adminMemberController.remove(params.id)
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'Fitur hapus member dinonaktifkan. Member yang jatuh tempo lebih dari 14 hari akan otomatis dinonaktifkan (status Nonaktif).',
+    },
+    { status: 405 }
+  )
 }
 
