@@ -991,37 +991,35 @@ export class AdminService {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      const visit = await tx.visit.create({
-        data: {
-          visitorName: memberId ? null : visitorName,
-          visitorEmail: memberId ? null : email,
-          visitorPhone: memberId ? null : phone,
-          memberId,
-          visitDate,
-          createdAt: visitDate,
-          notes: input.notes || null,
-          checkInStatus: 'CHECKED_IN',
-        },
-      })
+      const visitData: any = {
+        visitorName: memberId ? null : visitorName,
+        visitorEmail: memberId ? null : email,
+        visitorPhone: memberId ? null : phone,
+        memberId,
+        visitDate,
+        createdAt: visitDate,
+        notes: input.notes || null,
+        checkInStatus: 'CHECKED_IN',
+      }
+      const visit = await tx.visit.create({ data: visitData })
 
       const paymentDescription = memberId
         ? `Pembayaran kunjungan member ${visitorName} (${email || 'n/a'})`
         : `Pembayaran kunjungan guest ${visitorName}${email ? ' (' + email + ')' : ''} [QRIS Guest Visit Rp25.000]`
 
-      const payment = await tx.payment.create({
-        data: {
-          memberId,
-          type: 'VISIT',
-          amount,
-          status: 'PAID',
-          paymentMethod,
-          paidAt,
-          description: paymentDescription,
-          visitorName: memberId ? null : visitorName,
-          visitorEmail: memberId ? null : email,
-          visitorPhone: memberId ? null : phone,
-        },
-      })
+      const paymentData: any = {
+        memberId,
+        type: 'VISIT',
+        amount,
+        status: 'PAID',
+        paymentMethod,
+        paidAt,
+        description: paymentDescription,
+        visitorName: memberId ? null : visitorName,
+        visitorEmail: memberId ? null : email,
+        visitorPhone: memberId ? null : phone,
+      }
+      const payment = await tx.payment.create({ data: paymentData })
 
       if (memberId) {
         await applyBenefitsForPaidPayment(tx, { memberId, type: 'VISIT', orderId: null, paymentMethod, existingVisitId: visit.id })
